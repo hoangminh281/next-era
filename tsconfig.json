@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "dist",
     "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "preserve",
     "skipLibCheck": true,
     "strict": true,
     "declaration": true,
     "esModuleInterop": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
+    // "incremental": true,
     "plugins": [
       {
         "name": "next"
