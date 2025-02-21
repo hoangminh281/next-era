@@ -1,0 +1,35 @@
+{
+  "name": "next-era",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./lib": {
+      "import": "./dist/lib/utils.js",
+      "types": "./dist/lib/utils.d.ts"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "test": "node dist/test.js",
+    "build": "pnpm clean && tsc"
+  },
+  "keywords": [
+    "era",
+    "next",
+    "enhance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/lodash": "^4.17.15",
+    "@types/react": "^19.0.10",
+    "typescript": "^5.7.3"
+  }
+}
