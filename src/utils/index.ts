@@ -15,7 +15,6 @@ import {
   tail,
   without,
 } from "lodash";
-import { ReactNode } from "react";
 
 /**
  * Convert object keys from snakeCase to camelCase.
@@ -62,8 +61,8 @@ export function toCamelKey<T>(
 }
 
 export function between(
-  array: ReactNode[],
-  separator: ReactNode | ((index: number) => ReactNode)
+  array: unknown[],
+  separator: unknown | ((index: number) => unknown)
 ) {
   if (array.length < 2) return array; // No need to insert anything
 

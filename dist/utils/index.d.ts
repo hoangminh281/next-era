@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 /**
  * Convert object keys from snakeCase to camelCase.
  * @param obj - The object to process.
@@ -8,7 +7,7 @@ export declare function toCamelKey<T>(obj: string | number | null): string | num
 export declare function toCamelKey<T>(obj: Record<string, string | number | null>): T;
 export declare function toCamelKey<T>(obj: Record<string, string | number | null>[]): T[];
 export declare function toCamelKey<T>(obj: Record<string, string | number | null> | Record<string, string | number | null>[]): T | T[];
-export declare function between(array: ReactNode[], separator: ReactNode | ((index: number) => ReactNode)): ReactNode[];
+export declare function between(array: unknown[], separator: unknown | ((index: number) => unknown)): any[];
 export declare function defaultsDeep<T>(...params: T[]): T;
 export declare function doFlattenDeep(result: Record<string, string | number | undefined>, object?: Record<string, string | number | Record<string, string | number | undefined> | undefined>, path?: string[]): void;
 export declare function flattenDeep(object?: Record<string, string | number | Record<string, string | number | undefined> | undefined>): Record<string, string | number>;
