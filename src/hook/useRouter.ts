@@ -3,7 +3,9 @@ import {
   isEmpty,
   isObject,
   isString,
+  isUndefined,
   mapValues,
+  omitBy,
   template,
   templateSettings,
   toString,
@@ -26,11 +28,16 @@ const useRouter = () => {
 
       if (isObject(href.options)) {
         const search = new URLSearchParams(
-          mapValues(flattenDeep(href.options.searchParams), toString)
+          mapValues(
+            flattenDeep(omitBy(href.options.searchParams, isUndefined)),
+            toString
+          )
         ).toString();
 
         templateSettings.interpolate = /:([^\/]+)/g;
-        uri = template(href.path)(href.options.params);
+        uri = template(href.path)(
+          mapValues(href.options.params, encodeURIComponent)
+        );
         query = search ? "?" + search : "";
       }
 

@@ -1,8 +1,9 @@
 import { Logger } from "../log/index.js";
-import { assignWith, cloneDeepWith, has, isNumber, isObject, isPlainObject, isUndefined, omit, omitBy, unset, } from "lodash";
+import { assignWith, has, isPlainObject, isUndefined, omit, unset, } from "lodash";
 import { useCallback, useState } from "react";
 import { UseFetchMethodEnum, } from "./lib/definitions.js";
 import { useBool } from "./useBool.js";
+import useRouter from "./useRouter.js";
 const cachingData = {};
 const fetchingData = {};
 function doFetch(options, data) {
@@ -150,6 +151,7 @@ const defaultUserFetchOptions = {
     baseURL: process.env.NEXT_PUBLIC_NEXT_ERA_API_URL || process.env.NEXT_ERA_API_URL,
 };
 const useFetch = (method, uri, options = {}) => {
+    const { toHref } = useRouter();
     const [data, setData] = useState();
     const [isFetching, start, stop] = useBool();
     const [error, setError] = useState();
@@ -171,23 +173,21 @@ const useFetch = (method, uri, options = {}) => {
                     "\tPassing 'baseURL' into option of hook's param.\n" +
                     "\tSetting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file.");
             }
-            const url = new URL(uri, useFetchOptions.baseURL);
-            let query = "";
+            let url = new URL(uri, useFetchOptions.baseURL).toString();
             let body = data;
             if (isPlainObject(data)) {
                 data = data;
-                const params = cloneDeepWith(data?.params, (value) => {
-                    if (isNumber(value))
-                        return String(value);
-                    if (isObject(value))
-                        return omitBy(value, isUndefined);
+                url = toHref({
+                    path: url,
+                    options: {
+                        params: data.params,
+                        searchParams: data.searchParams,
+                    },
                 });
-                query = new URLSearchParams(params).toString();
-                url.search = query ? "?" + query : query;
-                body = omit(data, ["params"]);
+                body = omit(data, ["params", "searchParams"]);
             }
             const fetcherData = {
-                url: url.toString(),
+                url,
             };
             switch (method) {
                 case UseFetchMethodEnum.GET:

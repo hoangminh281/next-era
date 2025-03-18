@@ -1,4 +1,4 @@
-import { isEmpty, isObject, isString, mapValues, template, templateSettings, toString, } from "lodash";
+import { isEmpty, isObject, isString, isUndefined, mapValues, omitBy, template, templateSettings, toString, } from "lodash";
 import { flattenDeep } from "next-era/utils";
 import { useRouter as useNextRouter } from "next/navigation.js";
 import { useCallback } from "react";
@@ -12,9 +12,9 @@ const useRouter = () => {
             let uri = href.path;
             let query = "";
             if (isObject(href.options)) {
-                const search = new URLSearchParams(mapValues(flattenDeep(href.options.searchParams), toString)).toString();
+                const search = new URLSearchParams(mapValues(flattenDeep(omitBy(href.options.searchParams, isUndefined)), toString)).toString();
                 templateSettings.interpolate = /:([^\/]+)/g;
-                uri = template(href.path)(href.options.params);
+                uri = template(href.path)(mapValues(href.options.params, encodeURIComponent));
                 query = search ? "?" + search : "";
             }
             return uri + query;

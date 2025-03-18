@@ -1,16 +1,20 @@
 import {
   camelCase,
   cloneDeep,
+  compact,
   flatMap,
   isArray,
   isFunction,
   isNil,
   isObject,
+  isPlainObject,
   isUndefined,
   keys,
   defaultsDeep as lodashDefaultsDeep,
   flattenDepth as lodashFlattenDepth,
   map,
+  pick,
+  pickBy,
   set,
   tail,
   without,
@@ -142,9 +146,24 @@ export function unflattenDeep<T = Record<string, string | number>>(
   return result as Partial<T>;
 }
 
+export function clsx(...args: unknown[]) {
+  return compact(
+    lodashFlattenDepth(
+      map(args, (value) => {
+        if (isPlainObject(value)) {
+          return keys(pickBy(value as Record<string, unknown>, Boolean));
+        }
+
+        return value;
+      })
+    )
+  ).join(" ");
+}
+
 export default {
   between,
   defaultsDeep,
   flattenDeep,
   unflattenDeep,
+  clsx,
 };

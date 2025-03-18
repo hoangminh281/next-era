@@ -22,6 +22,7 @@ import {
   FetcherBodyType,
 } from "./lib/definitions.js";
 import { useBool } from "./useBool.js";
+import useRouter from "./useRouter.js";
 
 const cachingData: Record<
   string,
@@ -249,6 +250,8 @@ const useFetch = <T>(
   boolean,
   unknown
 ] => {
+  const { toHref } = useRouter();
+
   const [data, setData] = useState<T>();
   const [isFetching, start, stop] = useBool();
   const [error, setError] = useState<unknown>();
@@ -285,25 +288,24 @@ const useFetch = <T>(
           );
         }
 
-        const url = new URL(uri, useFetchOptions.baseURL);
-        let query = "";
+        let url = new URL(uri, useFetchOptions.baseURL).toString();
         let body = data;
 
         if (isPlainObject(data)) {
           data = data as UseFetchPlainDataType;
 
-          const params = cloneDeepWith(data?.params, (value) => {
-            if (isNumber(value)) return String(value);
-            if (isObject(value)) return omitBy(value, isUndefined);
+          url = toHref({
+            path: url,
+            options: {
+              params: data.params,
+              searchParams: data.searchParams,
+            },
           });
-
-          query = new URLSearchParams(params).toString();
-          url.search = query ? "?" + query : query;
-          body = omit(data, ["params"]);
+          body = omit(data, ["params", "searchParams"]);
         }
 
         const fetcherData: FetcherDataType = {
-          url: url.toString(),
+          url,
         };
 
         switch (method) {

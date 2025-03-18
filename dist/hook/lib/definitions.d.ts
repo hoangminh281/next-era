@@ -22,9 +22,11 @@ export type FetcherDataType = {
     url: string;
     options?: FetcherOptionType;
 };
-export type UseFetchPlainDataType = Record<string, string | number> | {
-    params?: Record<string, string | number | undefined>;
-};
+export type QueryType = Partial<{
+    params: Record<string, string | number | undefined>;
+    searchParams: Record<string, string | number | Record<string, string | number | undefined> | undefined>;
+}>;
+export type UseFetchPlainDataType = QueryType & Record<string, string | number | Record<string, string | number | undefined> | undefined>;
 export type UseFetchDataType = UseFetchPlainDataType | FormData | File;
 export type ResponseType = {
     headers: Headers;
@@ -33,10 +35,7 @@ export type ResponseType = {
 };
 export type UseRouterType = string | {
     path: string;
-    options?: Partial<{
-        params: Record<string, string | number | undefined>;
-        searchParams: Record<string, string | number | Record<string, string | number | undefined> | undefined>;
-    }>;
+    options?: QueryType;
 };
 export type UseFormChangeHandlerType = {
     event: React.FormEvent<HTMLFormElement> & {

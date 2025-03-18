@@ -12,10 +12,12 @@ export declare function defaultsDeep<T>(...params: T[]): T;
 export declare function flattenDeep(object?: Record<string, string | number | Record<string, string | number | undefined> | undefined>): Record<string, string | number>;
 export declare function flattenDeep(object?: (string | number | undefined)[]): (string | number)[];
 export declare function unflattenDeep<T = Record<string, string | number>>(object?: Record<string, string | number>): Partial<T>;
+export declare function clsx(...args: unknown[]): string;
 declare const _default: {
     between: typeof between;
     defaultsDeep: typeof defaultsDeep;
     flattenDeep: typeof flattenDeep;
     unflattenDeep: typeof unflattenDeep;
+    clsx: typeof clsx;
 };
 export default _default;

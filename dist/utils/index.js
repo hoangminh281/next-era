@@ -1,4 +1,4 @@
-import { camelCase, cloneDeep, flatMap, isArray, isFunction, isNil, isObject, isUndefined, keys, defaultsDeep as lodashDefaultsDeep, flattenDepth as lodashFlattenDepth, map, set, tail, without, } from "lodash";
+import { camelCase, cloneDeep, compact, flatMap, isArray, isFunction, isNil, isObject, isPlainObject, isUndefined, keys, defaultsDeep as lodashDefaultsDeep, flattenDepth as lodashFlattenDepth, map, pickBy, set, tail, without, } from "lodash";
 export function toCamelKey(obj) {
     if (isNil(obj) || typeof obj !== "object") {
         return obj; // Return the value if it's not an object
@@ -51,9 +51,18 @@ export function unflattenDeep(object) {
     });
     return result;
 }
+export function clsx(...args) {
+    return compact(lodashFlattenDepth(map(args, (value) => {
+        if (isPlainObject(value)) {
+            return keys(pickBy(value, Boolean));
+        }
+        return value;
+    }))).join(" ");
+}
 export default {
     between,
     defaultsDeep,
     flattenDeep,
     unflattenDeep,
+    clsx,
 };
