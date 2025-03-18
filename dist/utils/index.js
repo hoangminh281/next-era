@@ -26,7 +26,7 @@ export function defaultsDeep(...params) {
     const _params = cloneDeep(params);
     return lodashDefaultsDeep(_params[0], ...tail(_params));
 }
-export function doFlattenDeep(result, object, path = []) {
+function doFlattenDeep(result, object, path = []) {
     map(object, (value, key) => {
         if (isObject(value)) {
             doFlattenDeep(result, value, [...path, key]);
