@@ -82,7 +82,7 @@ export function defaultsDeep<T>(...params: T[]) {
   return lodashDefaultsDeep(_params[0], ...tail(_params)) as T;
 }
 
-export function doFlattenDeep(
+function doFlattenDeep(
   result: Record<string, string | number | undefined>,
   object?: Record<
     string,
