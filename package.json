@@ -59,5 +59,17 @@
     "next-auth": "5.0.0-beta.25",
     "react": "19.0.0-rc-f38c22b244-20240704",
     "typescript": "5.5.2"
+  },
+  "dependencies": {
+    "lodash": "4.17.21",
+    "next": "15.3.0-canary.1",
+    "next-auth": "5.0.0-beta.25",
+    "react": "19.0.0-rc-f38c22b244-20240704"
+  },
+  "devDependencies": {
+    "@types/lodash": "4.17.13",
+    "@types/node": "^22.13.5",
+    "@types/react": "18.3.3",
+    "typescript": "5.5.2"
   }
 }
