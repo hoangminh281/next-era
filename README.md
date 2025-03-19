@@ -86,7 +86,7 @@ const [isEditing, enableEditing, disableEditing] = useBool();
 
 A flexible hook for fetching API data.
 
-- **Requires:** A base API URL configured in `.env` or passed as an option. 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS)
+- **Requires:** A base API URL configured in `.env` or passed as an option. `NEXT_ERA_API_URL` or `NEXT_PUBLIC_NEXT_ERA_API_URL` (if you're working on NextJS)
 - **Uses:** `useFetch` (inspired by SWR) for optimized data fetching.
 
 **Default SWC Config:**
