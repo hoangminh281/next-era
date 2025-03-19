@@ -1,13 +1,18 @@
 import { useCallback, useState } from "react";
 
+/**
+ * Hook to manage boolean state.
+ * @param defaultValue default value of the boolean state
+ * @returns boolean state, setTrue, setFalse, toggle, setValue
+ */
 export const useBool = (
-  defaultValue = false,
+  defaultValue = false
 ): [
   boolean,
   () => void,
   () => void,
   () => void,
-  (isToggle: boolean) => void,
+  (isToggle: boolean) => void
 ] => {
   const [value, setValue] = useState(!!defaultValue);
 

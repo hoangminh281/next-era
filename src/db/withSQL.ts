@@ -528,6 +528,15 @@ const buildSetClause = (
   return setClause;
 };
 
+/**
+ * Function to build or execute SQL query, adapted from vercel/postgres. Secured by parameterized params passed into native SQL query.
+ * Example:
+ * ```ts
+ * withSQL(sqlPlugin).select({columns: 'name', from: 'words', where: {name: 'unknown'}}).execute()
+ * ```
+ * @param sql is the SQL plugin to be used, like @vercel/postgres
+ * @returns object with select, create, creates, update, updates, delete, deletes functions
+ */
 export default function withSQL<T extends SQLPluginType>(sql: T) {
   const utilities = (query: string, globalContext: GlobalContextType) => {
     query = query.replaceAll(/[ ]{2,}/gm, " ").trim();
