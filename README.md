@@ -44,6 +44,8 @@ Enhanced useActionState of React to allow update action's state manually by setS
 - Original:
 
 ```ts
+import { useActionState } from "react";
+
 const [errorMessage, formAction, isPending] = useActionState(
   authenticate,
   undefined
@@ -53,6 +55,8 @@ const [errorMessage, formAction, isPending] = useActionState(
 - Enhanced:
 
 ```ts
+import { useActionState } from "next-era/hook";
+
 const [errorMessage, formAction, isPending, setErrorMessage] = useActionState(
   authenticate,
   undefined
@@ -66,6 +70,8 @@ Hook to manage boolean state.
 - Example:
 
 ```ts
+import { useBool } from "next-era/hook";
+
 const [isEditing, onEditing, offEditing] = useBool();
 ```
 
@@ -89,6 +95,8 @@ The hook's using the concept of useSWC from SWR library, but it's more simple an
 - Example:
 
 ```ts
+import { useFetch } from "next-era/hook";
+
 const [values, fetchValues] = useFetch<ExampleType[]>(
   UseFetchMethodEnum.GET,
   "/api/example/route",
@@ -114,6 +122,8 @@ Example: 3 checkbox with same name 'animal', have 3 diffence value: 'chicken', '
 - Example:
 
 ```ts
+import { useFormChange } from "next-era/hook";
+
 const [onChange] = useFormChange(handleChange);
 ```
 
@@ -128,6 +138,8 @@ The object's path can be a template string with params and searchParams.
 - Enhanced
 
 ```tsx
+import { useRouter } from "next-era/hook";
+
 const { push } = useRouter();
 
 <div
@@ -152,6 +164,8 @@ Factory function to create a new instance of a DTO class.
 - Example:
 
 ```ts
+import { Factory } from "next-era/db";
+
 await Factory<ToType>(fromObject).to(toDTO);
 await Factory<ToType>(fromArray).toArray(toDTO);
 ```
@@ -163,6 +177,8 @@ Function to build or execute SQL query, adapted with vercel/postgres. Secured by
 - Example:
 
 ```ts
+import { withSQL } from "next-era/db";
+
 withSQL(sqlPlugin)
   .select({ columns: "name", from: "words", where: { name: "unknown" } })
   .execute();
@@ -175,6 +191,8 @@ Around with a try catch block that is able to rollback the transaction. Adapted 
 - Example:
 
 ```ts
+import withTransaction from "next-era/db";
+
 withTransaction(sql, sql.query(query, parameterizedValues));
 ```
 
@@ -185,7 +203,10 @@ Logger class creates a builder to build log instance, which can be used to log m
 - Example:
 
 ```ts
+import { Logger } from "next-era/log";
+
 const { debug } = new Logger(data).groupCollapsed("group label");
+
 debug`doing something`;
 debug`done`.groupEnd();
 ```
@@ -199,6 +220,8 @@ Insert a separator between each element of an array such as ReactNode.
 - Example:
 
 ```tsx
+import { between } from "next-era/utils";
+
 between(
   map(compact(breadcrumbs), (breadcrumb) => (
     <li key={breadcrumb.label} aria-current={breadcrumb.active}>
@@ -220,6 +243,8 @@ Left merge objects deeply without mutate original object of Lodash's defaultsDee
 - Example
 
 ```ts
+import { defaultsDeep } from "next-era/utils";
+
 defaultsDeep(...flatMap(group)).name;
 ```
 
@@ -230,6 +255,8 @@ Flatten object deeply. Useful for routing to another path with searchParams like
 - Example
 
 ```ts
+import { flattenDeep } from "next-era/utils";
+
 flattenDeep({ ancestor: { parent: { child: 1, child: 2 } } }); // {'ancestor.parent.child': 1, 'ancestor.parent.child': 2}
 ```
 
@@ -240,6 +267,8 @@ Unflatten object deeply. Useful for extracting searchParams after routing by fla
 - Example:
 
 ```ts
+import { unflattenDeep } from "next-era/utils";
+
 unflattenDeep<ToType>(await props.searchParams); // {ancestor: {parent: {child: 1, child: 2}}}
 ```
 
