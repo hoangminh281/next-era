@@ -1,4 +1,9 @@
 import { useCallback, useState } from "react";
+/**
+ * Hook to manage boolean state.
+ * @param defaultValue default value of the boolean state
+ * @returns boolean state, setTrue, setFalse, toggle, setValue
+ */
 export const useBool = (defaultValue = false) => {
     const [value, setValue] = useState(!!defaultValue);
     const setTrue = useCallback(() => setValue(true), []);

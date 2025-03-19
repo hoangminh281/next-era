@@ -12,6 +12,12 @@ export function toCamelKey(obj) {
         return result;
     }, {});
 }
+/**
+ * Insert a separator between each element of an array such as ReactNode.
+ * @param array The array to process.
+ * @param separator The separator to insert between each element.
+ * @returns A new array with the separator inserted between each element.
+ */
 export function between(array, separator) {
     if (array.length < 2)
         return array; // No need to insert anything
@@ -22,6 +28,11 @@ export function between(array, separator) {
         ]
         : [item]);
 }
+/**
+ * Left merge objects deeply without mutate original object.
+ * @param params The objects to merge.
+ * @returns A new object merged deeply.
+ */
 export function defaultsDeep(...params) {
     const _params = cloneDeep(params);
     return lodashDefaultsDeep(_params[0], ...tail(_params));
@@ -44,6 +55,17 @@ export function flattenDeep(object) {
     doFlattenDeep(result, object);
     return result;
 }
+/**
+ * Unflatten object deeply. Useful for extracting searchParams after routing by flattenDeep function.
+ * Example:
+ * ```ts
+ * unflattenDeep<ToType>(
+ *  await props.searchParams,
+ * ); // {ancestor: {parent: {child: 1, child: 2}}}
+ * ```
+ * @param object The object to unflatten.
+ * @returns A new object unflattened deeply.
+ */
 export function unflattenDeep(object) {
     const result = {};
     map(object, (value, key) => {
