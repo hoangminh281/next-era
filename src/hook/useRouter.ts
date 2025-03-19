@@ -21,15 +21,30 @@ import { useCallback } from "react";
  * ```tsx
  * const { push } = useRouter();
  *
- * <div onClick={() =>
- *  push({
- *    path: "/example/route/id/:id/detail",
- *    options: {
- *      params: { id },
- *      searchParams: { page: 1, limit: 10 },
- *    },
- *  })
- * }
+ * return (
+ *   <>
+ *     <div
+ *       onClick={() =>
+ *         push({
+ *           path: "/example/route/id/:id/detail",
+ *           options: {
+ *             params: { id },
+ *             searchParams: { page: 1, limit: 10 },
+ *           },
+ *         })
+ *       }
+ *     />
+ *     <Link
+ *       href={toHref({
+ *         path: "/example/route/id/:id/detail",
+ *         options: {
+ *           params: { id },
+ *           searchParams: { page: 1, limit: 10 },
+ *         },
+ *       })}
+ *     />
+ *   </>
+ * );
  * ></div>
  * ```
  * @returns standard Next useRouter's function, toHref, push

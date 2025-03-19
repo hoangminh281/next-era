@@ -87,7 +87,7 @@ export function between(
 }
 
 /**
- * Left merge objects deeply without mutate original object.
+ * Left merge objects deeply without mutating original object.
  * @param params The objects to merge.
  * @returns A new object merged deeply.
  */
@@ -115,7 +115,7 @@ function doFlattenDeep(
 }
 
 /**
- * Flatten object deeply. Useful for routing to another path with searchParams like: https://example.com/route?ancestor.parent.child=1&ancestor.parent.child=2
+ * Flatten object deeply. Useful for routing to another path with searchParams like: `https://example.com/route?ancestor.parent.child=1&ancestor.parent.child=2`
  * Example:
  * ```ts
  * flattenDeep({ancestor: {parent: {child: 1, child: 2}}}) // {'ancestor.parent.child': 1, 'ancestor.parent.child': 2}

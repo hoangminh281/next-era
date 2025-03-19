@@ -117,7 +117,7 @@ Hook to handle form change event.
 
 Specific for checkbox change event. since checkbox is multichoice checker, the data's passing to handler will be array of string joined by ','.
 
-Example: 3 checkbox with same name 'animal', have 3 diffence value: 'chicken', 'cow', 'duck', in one group, the handler will be received data => 'chicken,cow,duck' instead of 'chicken' or 'cow' or 'duck' by each change event.
+Example: 3 checkboxes with same name 'animal', have 3 diffence values: 'chicken', 'cow', 'duck', in one group, the handler will be received data => 'chicken,cow,duck' instead of 'chicken' or 'cow' or 'duck' by each change event.
 
 - Example:
 
@@ -140,19 +140,32 @@ The object's path can be a template string with params and searchParams.
 ```tsx
 import { useRouter } from "next-era/hook";
 
-const { push } = useRouter();
+const { push, toHref } = useRouter();
 
-<div
-  onClick={() =>
-    push({
-      path: "/example/route/id/:id/detail",
-      options: {
-        params: { id },
-        searchParams: { page: 1, limit: 10 },
-      },
-    })
-  }
-></div>;
+return (
+  <>
+    <div
+      onClick={() =>
+        push({
+          path: "/example/route/id/:id/detail",
+          options: {
+            params: { id },
+            searchParams: { page: 1, limit: 10 },
+          },
+        })
+      }
+    />
+    <Link
+      href={toHref({
+        path: "/example/route/id/:id/detail",
+        options: {
+          params: { id },
+          searchParams: { page: 1, limit: 10 },
+        },
+      })}
+    />
+  </>
+);
 ```
 
 ### API routes (SSR/SSG)
@@ -200,6 +213,8 @@ withTransaction(sql, sql.query(query, parameterizedValues));
 
 Logger class creates a builder to build log instance, which can be used to log messages to the console.
 
+Log function's able to use template literals.
+
 - Example:
 
 ```ts
@@ -238,7 +253,7 @@ between(
 
 #### defaultsDeep (unmutate)
 
-Left merge objects deeply without mutate original object of Lodash's defaultsDeep.
+Left merge objects deeply without mutating original object of Lodash's defaultsDeep.
 
 - Example
 
@@ -250,7 +265,7 @@ defaultsDeep(...flatMap(group)).name;
 
 #### flattenDeep
 
-Flatten object deeply. Useful for routing to another path with searchParams like: https://example.com/route?ancestor.parent.child=1&ancestor.parent.child=2
+Flatten object deeply. Useful for routing to another path with searchParams like: `https://example.com/route?ancestor.parent.child=1&ancestor.parent.child=2`
 
 - Example
 
@@ -276,7 +291,7 @@ unflattenDeep<ToType>(await props.searchParams); // {ancestor: {parent: {child: 
 
 We welcome contributions from the community! To contribute, please follow these steps:
 
-1. Fork the repository.
+1. Fork the repository: https://github.com/hoangminh281/next-era
 2. Create a new branch:
    ```bash
    git checkout -b feature-branch
