@@ -71,7 +71,10 @@ const [isEditing, onEditing, offEditing] = useBool();
 
 #### useFetch
 
-Hook to fetch data from API. To use this hook, you need to provide the base URL of the API in config file. If you don't provide, it will throw an error: "Base URL not found. Please provide by one of ways: Passing 'baseURL' into option of hook's param. Setting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file.".
+Hook to fetch data from API. To use this hook, you need to provide the base URL of the API in config file. If you don't provide, it will throw an error: "Base URL not found.
+
+Please provide by one of ways: Passing 'baseURL' into option of hook's param. Setting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file.".
+
 The hook's using the concept of useSWC from SWR library, but it's more simple and easy to use. Default configuration of swc is:
 
 ```json
@@ -103,7 +106,9 @@ const [values, fetchValues] = useFetch<ExampleType[]>(
 #### useFormChange
 
 Hook to handle form change event.
+
 Specific for checkbox change event. since checkbox is multichoice checker, the data's passing to handler will be array of string joined by ','.
+
 Example: 3 checkbox with same name 'animal', have 3 diffence value: 'chicken', 'cow', 'duck', in one group, the handler will be received data => 'chicken,cow,duck' instead of 'chicken' or 'cow' or 'duck' by each change event.
 
 - Example:
@@ -115,6 +120,7 @@ const [onChange] = useFormChange(handleChange);
 #### useRouter
 
 Enhanced useRouter of next/navigation, the hook's allow to pass a object with path and option to push or convert to string URL by toHref.
+
 The object's path can be a template string with params and searchParams.
 
 - Original: Next's useRouter
