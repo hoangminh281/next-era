@@ -12,6 +12,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "moduleDetection": "legacy",
     // "incremental": true,
     "plugins": [
       {
@@ -21,10 +22,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "lib": ["es2022", "webworker"]
   },
-  "include": [
-    "src",
-  ],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
