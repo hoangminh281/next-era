@@ -6,10 +6,12 @@ export enum UseFetchMethodEnum {
 }
 
 export type UseFetchOptionType<T> = {
-  revalidateIfStale?: {
-    maxAge: number;
-    staleWhileRevalidate: number;
-  };
+  revalidateIfStale?:
+    | {
+        maxAge: number;
+        staleWhileRevalidate: number;
+      }
+    | boolean;
   formatter: (response: ResponseType) => Promise<T>;
   baseURL?: string;
 };

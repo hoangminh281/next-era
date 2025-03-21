@@ -2,12 +2,14 @@ import { Logger } from "../log/index.js";
 import {
   assignWith,
   has,
+  isEmpty,
+  isObject,
   isPlainObject,
   isUndefined,
   omit,
   unset,
 } from "lodash";
-import { useCallback, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import {
   UseFetchDataType,
   FetcherDataType,
@@ -79,30 +81,33 @@ function doFetch<T>(
       debug`Start fetching`;
 
       // Running fetching
-      const response = await fetch(data.url, data.options);
+      const fetched = await fetch(data.url, data.options);
+      const response = {
+        headers: fetched.headers,
+        status: fetched.status,
+        data: (await fetched.json()).data,
+      };
       debug`Complete fetching`;
 
-      // Saving response to caching data
-      cachingData[key] = {
-        response: {
-          headers: response.headers,
-          status: response.status,
-          data: (await response.json()).data,
-        },
-        isToggle: false,
-        revalidateIfStale: {
-          isStale: false,
-          timestamp: Date.now(),
-        },
-      };
-      debug`Saving response to caching data`;
+      if (isObject(options.revalidateIfStale)) {
+        // Saving response to caching data
+        cachingData[key] = {
+          response,
+          isToggle: false,
+          revalidateIfStale: {
+            isStale: false,
+            timestamp: Date.now(),
+          },
+        };
+        debug`Saving response to caching data`;
+      }
 
       let promise;
       let index = 1;
 
       while (typeof (promise = fetchingData[key].shift()) !== "undefined") {
         // Completing fetching, resolve response for saved promises
-        promise.resolve(cachingData[key].response);
+        promise.resolve(response);
         debug`Resolve response for saved promise: #${index}`;
         index++;
       }
@@ -183,7 +188,7 @@ function doRevalidate<T>(
     return;
   }
 
-  if (!options.revalidateIfStale) {
+  if (!isObject(options.revalidateIfStale)) {
     // RevalidateIfStale is not toggled, turn caching data off, going to fetch
     cachingData[key].isToggle = false;
     debug`revalidateIfStale is turned off`.groupEnd();
@@ -225,11 +230,8 @@ function doRevalidate<T>(
   groupEnd();
 }
 
-const defaultUserFetchOptions = {
-  revalidateIfStale: {
-    maxAge: 60, // 60 seconds
-    staleWhileRevalidate: 10, // 10 seconds
-  },
+const defaultUseFetchOptions = {
+  revalidateIfStale: false,
   formatter: async <T>(response: ResponseType) =>
     Promise.resolve(response?.data as T),
   baseURL:
@@ -255,18 +257,39 @@ const defaultUserFetchOptions = {
 const useFetch = <T>(
   method: UseFetchMethodEnum,
   uri: string,
-  options: Partial<UseFetchOptionType<T> | { revalidateIfStale: boolean }> = {}
+  options: Partial<UseFetchOptionType<T>> = {}
 ): [
   T | undefined,
   (data?: UseFetchDataType) => Promise<T | undefined>,
   boolean,
-  unknown
+  unknown,
+  Dispatch<SetStateAction<T | undefined>>
 ] => {
   const { toHref } = useRouter();
 
   const [data, setData] = useState<T>();
   const [isFetching, start, stop] = useBool();
   const [error, setError] = useState<unknown>();
+
+  const getUseFetchOptions = useCallback(
+    (defaultOptions: UseFetchOptionType<T>) =>
+      assignWith({}, options, defaultOptions, (objValue, srcValue) => {
+        if (isUndefined(objValue)) {
+          return srcValue;
+        }
+
+        if (objValue === true) {
+          return srcValue || objValue;
+        }
+
+        if (objValue === false) {
+          return undefined;
+        }
+
+        return objValue;
+      }),
+    [options]
+  );
 
   const fetcher = useCallback(
     async (data?: UseFetchDataType) => {
@@ -275,21 +298,8 @@ const useFetch = <T>(
       try {
         start();
 
-        const useFetchOptions: UseFetchOptionType<T> = assignWith(
-          {},
-          options,
-          defaultUserFetchOptions,
-          (objValue, srcValue) => {
-            if (isUndefined(objValue)) {
-              return srcValue;
-            }
-
-            if (objValue === false) {
-              return undefined;
-            }
-
-            return objValue;
-          }
+        let useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
+          defaultUseFetchOptions
         );
 
         if (!useFetchOptions.baseURL) {
@@ -300,14 +310,14 @@ const useFetch = <T>(
           );
         }
 
-        let url = new URL(uri, useFetchOptions.baseURL).toString();
+        let path = uri;
         let body = data;
 
         if (isPlainObject(data)) {
           data = data as UseFetchPlainDataType;
 
-          url = toHref({
-            path: url,
+          path = toHref({
+            path,
             options: {
               params: data.params,
               searchParams: data.searchParams,
@@ -317,11 +327,19 @@ const useFetch = <T>(
         }
 
         const fetcherData: FetcherDataType = {
-          url,
+          url: new URL(path, useFetchOptions.baseURL).toString(),
         };
 
         switch (method) {
           case UseFetchMethodEnum.GET:
+            useFetchOptions = getUseFetchOptions({
+              ...useFetchOptions,
+              revalidateIfStale: {
+                maxAge: 60, // 60 seconds
+                staleWhileRevalidate: 10, // 10 seconds
+              },
+            });
+
             break;
 
           case UseFetchMethodEnum.POST:
@@ -378,7 +396,7 @@ const useFetch = <T>(
     [uri, method, start, stop, setData, setError]
   );
 
-  return [data, fetcher, isFetching, error];
+  return [data, fetcher, isFetching, error, setData];
 };
 
 export default useFetch;
