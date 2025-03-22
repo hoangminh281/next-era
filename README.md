@@ -54,7 +54,7 @@ import { useActionState } from "react";
 
 const [errorMessage, formAction, isPending] = useActionState(
   authenticate,
-  undefined
+  undefined,
 );
 ```
 
@@ -65,7 +65,7 @@ import { useActionState } from "next-era/hook";
 
 const [errorMessage, formAction, isPending, setErrorMessage] = useActionState(
   authenticate,
-  undefined
+  undefined,
 );
 // `setErrorMessage` allows manual updates to `errorMessage`
 ```
@@ -111,7 +111,7 @@ const [values, fetchValues] = useFetch<ExampleType[]>(
   {
     formatter: async ({ data }) =>
       data.map(({ name, id }) => ({ label: name, value: id })),
-  }
+  },
 );
 ```
 
@@ -229,7 +229,7 @@ between(
     <span key={index} className="mx-3">
       /
     </span>
-  )
+  ),
 );
 ```
 

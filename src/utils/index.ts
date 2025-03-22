@@ -13,7 +13,6 @@ import {
   defaultsDeep as lodashDefaultsDeep,
   flattenDepth as lodashFlattenDepth,
   map,
-  pick,
   pickBy,
   set,
   tail,
@@ -25,17 +24,15 @@ import {
  * @param obj - The object to process.
  * @returns A new object with camelCase keys.
  */
-export function toCamelKey<T>(
-  obj: string | number | null
-): string | number | null;
+export function toCamelKey(obj: string | number | null): string | number | null;
 export function toCamelKey<T>(obj: Record<string, string | number | null>): T;
 export function toCamelKey<T>(
-  obj: Record<string, string | number | null>[]
+  obj: Record<string, string | number | null>[],
 ): T[];
 export function toCamelKey<T>(
   obj:
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[]
+    | Record<string, string | number | null>[],
 ): T | T[];
 export function toCamelKey<T>(
   obj:
@@ -43,7 +40,7 @@ export function toCamelKey<T>(
     | string
     | number
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[]
+    | Record<string, string | number | null>[],
 ): null | string | number | T | T[] {
   if (isNil(obj) || typeof obj !== "object") {
     return obj; // Return the value if it's not an object
@@ -60,7 +57,7 @@ export function toCamelKey<T>(
 
       return result;
     },
-    {}
+    {},
   ) as T;
 }
 
@@ -72,7 +69,7 @@ export function toCamelKey<T>(
  */
 export function between(
   array: unknown[],
-  separator: unknown | ((index: number) => unknown)
+  separator: unknown | ((index: number) => unknown),
 ) {
   if (array.length < 2) return array; // No need to insert anything
 
@@ -82,7 +79,7 @@ export function between(
           item,
           isFunction(separator) ? separator(array.length + index) : separator,
         ]
-      : [item]
+      : [item],
   );
 }
 
@@ -103,7 +100,7 @@ function doFlattenDeep(
     string,
     string | number | Record<string, string | number | undefined> | undefined
   >,
-  path: string[] = []
+  path: string[] = [],
 ) {
   map(object, (value, key) => {
     if (isObject(value)) {
@@ -126,10 +123,10 @@ export function flattenDeep(
   object?: Record<
     string,
     string | number | Record<string, string | number | undefined> | undefined
-  >
+  >,
 ): Record<string, string | number>;
 export function flattenDeep(
-  object?: (string | number | undefined)[]
+  object?: (string | number | undefined)[],
 ): (string | number)[];
 export function flattenDeep(
   object?:
@@ -140,7 +137,7 @@ export function flattenDeep(
         | Record<string, string | number | undefined>
         | undefined
       >
-    | (string | number | undefined)[]
+    | (string | number | undefined)[],
 ) {
   if (isArray(object)) {
     return lodashFlattenDepth(without(object, undefined));
@@ -165,7 +162,7 @@ export function flattenDeep(
  * @returns A new object unflattened deeply.
  */
 export function unflattenDeep<T = Record<string, string | number>>(
-  object?: Record<string, string | number>
+  object?: Record<string, string | number>,
 ) {
   const result = {};
 
@@ -185,15 +182,17 @@ export function clsx(...args: unknown[]) {
         }
 
         return value;
-      })
-    )
+      }),
+    ),
   ).join(" ");
 }
 
-export default {
+const utils = {
   between,
   defaultsDeep,
   flattenDeep,
   unflattenDeep,
   clsx,
 };
+
+export default utils;

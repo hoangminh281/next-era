@@ -16,17 +16,17 @@ import {
 const useActionState = <State, Payload>(
   action: (state: Awaited<State>, payload: Payload) => State | Promise<State>,
   initialState: Awaited<State>,
-  permalink?: string
+  permalink?: string,
 ): [
   state: Awaited<State>,
   dispatch: (payload: Payload) => void,
   isPending: boolean,
-  setState: Dispatch<SetStateAction<Awaited<State>>>
+  setState: Dispatch<SetStateAction<Awaited<State>>>,
 ] => {
   const [state, formAction, isPending] = useActionStateReact(
     action,
     initialState,
-    permalink
+    permalink,
   );
   const [customState, setCustomState] = useState(state);
 

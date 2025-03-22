@@ -7,7 +7,7 @@ import { SQLPluginType } from "./lib/definitions.js";
  */
 export default async function withTransaction<T extends SQLPluginType>(
   sql: T,
-  query: Promise<{ rows: any[] }>
+  query: Promise<{ rows: unknown[] }>,
 ) {
   try {
     await sql.query("BEGIN");

@@ -49,7 +49,9 @@
   "scripts": {
     "clean": "rm -rf dist",
     "test": "node dist/test.js",
-    "build": "pnpm clean && tsc"
+    "lint": "pnpm eslint . --fix",
+    "format": "pnpm prettier --write . --log-level silent",
+    "build": "pnpm format && pnpm lint && pnpm clean && tsc"
   },
   "engines": {
     "node": ">=20.12.0"
@@ -62,8 +64,7 @@
     "lodash": "4.17.21",
     "next": "15.3.0-canary.1",
     "next-auth": "5.0.0-beta.25",
-    "react": "19.0.0-rc-f38c22b244-20240704",
-    "typescript": "5.5.2"
+    "react": "19.0.0-rc-f38c22b244-20240704"
   },
   "dependencies": {
     "lodash": "4.17.21",
@@ -76,6 +77,10 @@
     "@types/node": "22.13.5",
     "@types/react": "18.3.3",
     "@types/webpack": "5.28.5",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.2.3",
+    "prettier": "3.5.3",
+    "prettier-plugin-organize-imports": "4.1.0",
     "typescript": "5.5.2"
   }
 }

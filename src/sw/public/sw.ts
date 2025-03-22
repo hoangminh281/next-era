@@ -91,22 +91,27 @@ const enableNavigationPreload = async () => {
   }
 };
 
+selve.addEventListener("install", (event) => {
+  event.waitUntil(addResourcesToCache([]));
+});
+
 selve.addEventListener("activate", (event) => {
   event.waitUntil(enableNavigationPreload());
   event.waitUntil(deleteOldCaches());
 });
 
-selve.addEventListener("install", (event) => {
-  event.waitUntil(addResourcesToCache([]));
-});
-
 selve.addEventListener("fetch", (event) => {
+  console.info("fetch event", event.request.url);
   event.respondWith(
     cacheFirst({
       request: event.request,
       preloadResponsePromise: event.preloadResponse,
       fallbackUrl: "/gallery/myLittleVader.jpg",
       event,
-    })
+    }),
   );
+});
+
+selve.addEventListener("push", function () {
+  console.log("[Service Worker] Push Received.");
 });

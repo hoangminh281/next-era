@@ -35,46 +35,46 @@ const WhereClauseFactory = {
   and: (
     data: Record<string, WhereValueType>,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("and");
 
     debug`Building 'AND' clause`;
 
     return `(${doBuildWhereClause(data, localContext, globalContext).join(
-      " AND "
+      " AND ",
     )})`;
   },
   or: (
     data: Record<string, WhereValueType>,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("or");
 
     debug`Building 'OR' clause`;
 
     return `(${doBuildWhereClause(data, localContext, globalContext).join(
-      " OR "
+      " OR ",
     )})`;
   },
   in: (
     data: string,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("in");
 
     debug`Building 'IN' clause`;
@@ -82,7 +82,7 @@ const WhereClauseFactory = {
     globalContext.parameterized.values.push(data);
 
     return `${snakeCase(
-      nth(localContext.keyPath, -2)
+      nth(localContext.keyPath, -2),
     )}::TEXT = ANY(STRING_TO_ARRAY($${
       globalContext.parameterized.values.length
     }, ',')::TEXT[])`;
@@ -90,12 +90,12 @@ const WhereClauseFactory = {
   isNull: (
     data: WhereClauseType,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("isNull");
 
     debug`Building 'IS NULL' clause`;
@@ -105,12 +105,12 @@ const WhereClauseFactory = {
   ilike: (
     data: string,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("ilike");
 
     debug`Building 'ILIKE' clause`;
@@ -124,12 +124,12 @@ const WhereClauseFactory = {
   raw: (
     data: string | WhereValueRawType,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("raw");
 
     debug`Building raw clause`;
@@ -146,12 +146,12 @@ const WhereClauseFactory = {
   default: (
     data: WhereValueType,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("default");
 
     debug`Building default clause`;
@@ -200,12 +200,12 @@ const WhereClauseFactory = {
 const doBuildWhereClause = (
   data: WhereClauseType,
   localContext: LocalContextType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ): string[] => {
   const { debug } = new Logger(
     data,
     localContext,
-    globalContext
+    globalContext,
   ).groupCollapsed("doBuildWhereClause");
 
   debug`Doing build`;
@@ -226,7 +226,7 @@ const doBuildWhereClause = (
         const clause = get(WhereClauseFactory, key, WhereClauseFactory.default)(
           value,
           localContext,
-          globalContext
+          globalContext,
         );
 
         localContext.keyPath.pop();
@@ -235,7 +235,7 @@ const doBuildWhereClause = (
           .debug`Factory did build`.groupEnd();
 
         return clause;
-      })
+      }),
     );
 
     debug`Data is built`.groupEnd();
@@ -250,7 +250,7 @@ const doBuildWhereClause = (
 
 const buildWhereClause = (
   data: WhereClauseType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ) => {
   if (isEmpty(data)) {
     return "";
@@ -259,13 +259,13 @@ const buildWhereClause = (
   const localContext: LocalContextType = { keyPath: [] };
 
   new Logger(data, localContext, globalContext).groupCollapsed(
-    "buildWhereClause"
+    "buildWhereClause",
   ).debug`Starting build`;
 
   const whereClause = doBuildWhereClause(
     data,
     localContext,
-    globalContext
+    globalContext,
   ).join(" AND ");
 
   new Logger(data, localContext, globalContext, `\`${whereClause}\``)
@@ -278,12 +278,12 @@ const OrderClauseFactory = {
   by: (
     data: string | OrderByValueType,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("by");
 
     debug`Building 'BY' clause`;
@@ -302,12 +302,12 @@ const OrderClauseFactory = {
   sort: (
     data: SortEnum,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("sort");
 
     debug`Building sort clause`;
@@ -317,12 +317,12 @@ const OrderClauseFactory = {
   in: (
     data: string,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("in");
 
     debug`Building in clause`;
@@ -336,12 +336,12 @@ const OrderClauseFactory = {
   default: (
     data: OrderClauseType,
     localContext: LocalContextType,
-    globalContext: GlobalContextType
+    globalContext: GlobalContextType,
   ) => {
     const { debug } = new Logger(
       data,
       localContext,
-      globalContext
+      globalContext,
     ).groupCollapsed("default");
 
     debug`Building default clause`;
@@ -361,12 +361,12 @@ const OrderClauseFactory = {
 const doBuildOrderClause = (
   data: OrderClauseType,
   localContext: LocalContextType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ): string[] => {
   const { debug } = new Logger(
     data,
     localContext,
-    globalContext
+    globalContext,
   ).groupCollapsed("doBuildOrderClause");
 
   debug`Doing build`;
@@ -387,7 +387,7 @@ const doBuildOrderClause = (
         const clause = get(OrderClauseFactory, key, OrderClauseFactory.default)(
           value,
           localContext,
-          globalContext
+          globalContext,
         );
 
         localContext.keyPath.pop();
@@ -396,7 +396,7 @@ const doBuildOrderClause = (
           .debug`Factory did build`.groupEnd();
 
         return clause;
-      })
+      }),
     );
 
     debug`Data is built`.groupEnd();
@@ -425,7 +425,7 @@ const doBuildOrderClause = (
  */
 const buildOrderClause = (
   data: OrderClauseType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ) => {
   if (isEmpty(data)) {
     return "";
@@ -434,13 +434,13 @@ const buildOrderClause = (
   const localContext: LocalContextType = { keyPath: [] };
 
   new Logger(data, localContext, globalContext).groupCollapsed(
-    "buildOrderClause"
+    "buildOrderClause",
   ).debug`Starting build`;
 
   const orderClause = doBuildOrderClause(
     data,
     localContext,
-    globalContext
+    globalContext,
   ).join(" ");
 
   new Logger(data, localContext, globalContext, `\`${orderClause}\``)
@@ -451,7 +451,7 @@ const buildOrderClause = (
 
 const buildColumnClause = (
   data: CreateValuesType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ) => {
   if (isEmpty(data)) {
     return "";
@@ -460,7 +460,7 @@ const buildColumnClause = (
   const localContext: LocalContextType = { keyPath: [] };
 
   new Logger(data, localContext, globalContext).groupCollapsed(
-    "buildColumnClause"
+    "buildColumnClause",
   ).debug`Starting build`;
 
   const columns = keys(omitBy(data, isUndefined)).map(snakeCase);
@@ -475,7 +475,7 @@ const buildColumnClause = (
 
 const buildValueClause = (
   data: CreateValuesType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ) => {
   if (isEmpty(data)) {
     return "";
@@ -484,7 +484,7 @@ const buildValueClause = (
   const localContext: LocalContextType = { keyPath: [] };
 
   new Logger(data, localContext, globalContext).groupCollapsed(
-    "buildValueClause"
+    "buildValueClause",
   ).debug`Starting build`;
 
   const value = values(omitBy(data, isUndefined)).map((value) => {
@@ -503,7 +503,7 @@ const buildValueClause = (
 
 const buildSetClause = (
   data: UpdateSetType,
-  globalContext: GlobalContextType
+  globalContext: GlobalContextType,
 ) => {
   if (isEmpty(data)) {
     return "";
@@ -548,7 +548,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
         if (globalContext.transaction) {
           return withTransaction(
             sql,
-            sql.query(query, globalContext.parameterized.values)
+            sql.query(query, globalContext.parameterized.values),
           );
         }
 
@@ -595,7 +595,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       schema: CreateSchemaType,
       globalContext: GlobalContextType | undefined = {
         parameterized: { values: [] },
-      }
+      },
     ) => {
       const { into, values } = schema;
 
@@ -620,7 +620,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       };
       const query = map(
         schemas,
-        (schema) => withSQL(sql).create(schema, globalContext).toRaw().query
+        (schema) => withSQL(sql).create(schema, globalContext).toRaw().query,
       ).join(";");
 
       new Logger(schemas, `\`${query}\``)
@@ -632,7 +632,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       schema: UpdateSchemaType,
       globalContext: GlobalContextType | undefined = {
         parameterized: { values: [] },
-      }
+      },
     ) => {
       const { on, set, where } = schema;
 
@@ -658,7 +658,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       };
       const query = map(
         schemas,
-        (schema) => withSQL(sql).update(schema, globalContext).toRaw().query
+        (schema) => withSQL(sql).update(schema, globalContext).toRaw().query,
       ).join(";");
 
       new Logger(schemas, `\`${query}\``)
@@ -670,7 +670,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       schema: DeleteSchemaType,
       globalContext: GlobalContextType | undefined = {
         parameterized: { values: [] },
-      }
+      },
     ) => {
       const { from, where } = schema;
 
@@ -695,7 +695,7 @@ export default function withSQL<T extends SQLPluginType>(sql: T) {
       };
       const query = map(
         schemas,
-        (schema) => withSQL(sql).delete(schema, globalContext).toRaw().query
+        (schema) => withSQL(sql).delete(schema, globalContext).toRaw().query,
       ).join(";");
 
       new Logger(schemas, `\`${query}\``)

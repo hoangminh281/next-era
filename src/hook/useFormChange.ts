@@ -33,8 +33,8 @@ const useFormChange = (handler: (data: UseFormChangeHandlerType) => void) => {
                     [...split(String(defaultValue), ","), value],
                     undefined,
                     null,
-                    ""
-                  )
+                    "",
+                  ),
                 );
               } else {
                 value = uniq(
@@ -43,8 +43,8 @@ const useFormChange = (handler: (data: UseFormChangeHandlerType) => void) => {
                     value,
                     undefined,
                     null,
-                    ""
-                  )
+                    "",
+                  ),
                 );
               }
             }
@@ -54,7 +54,7 @@ const useFormChange = (handler: (data: UseFormChangeHandlerType) => void) => {
         },
       });
     },
-    [handler]
+    [handler],
   );
 
   return [onChange];

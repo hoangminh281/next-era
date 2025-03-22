@@ -1,8 +1,6 @@
-import { Logger } from "../log/index.js";
 import {
   assignWith,
   has,
-  isEmpty,
   isObject,
   isPlainObject,
   isUndefined,
@@ -10,14 +8,15 @@ import {
   unset,
 } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
+import { Logger } from "../log/index.js";
 import {
-  UseFetchDataType,
+  FetcherBodyType,
   FetcherDataType,
-  UseFetchPlainDataType,
   ResponseType,
+  UseFetchDataType,
   UseFetchMethodEnum,
   UseFetchOptionType,
-  FetcherBodyType,
+  UseFetchPlainDataType,
 } from "./lib/definitions.js";
 import { useBool } from "./useBool.js";
 import useRouter from "./useRouter.js";
@@ -40,7 +39,7 @@ const fetchingData: Record<
 
 function doFetch<T>(
   options: UseFetchOptionType<T>,
-  data: FetcherDataType
+  data: FetcherDataType,
 ): Promise<ResponseType> {
   return new Promise(async (resolve, reject) => {
     const key = JSON.stringify({
@@ -51,7 +50,7 @@ function doFetch<T>(
       options,
       data,
       () => cachingData[key],
-      () => fetchingData[key]
+      () => fetchingData[key],
     ).groupCollapsed("doFetch");
 
     try {
@@ -117,7 +116,7 @@ function doFetch<T>(
       debug`Remove completed fetching data out`;
     } catch (e) {
       let promise;
-      let index = 1;
+      const index = 1;
 
       while (typeof (promise = fetchingData[key].shift()) !== "undefined") {
         // Completing fetching, reject error for saved promises
@@ -135,14 +134,14 @@ function doFetch<T>(
 
 function doCache<T>(
   options: UseFetchOptionType<T>,
-  data: FetcherDataType
+  data: FetcherDataType,
 ): ResponseType | undefined {
   const key = JSON.stringify({ url: data.url, options: data.options });
   const { debug } = new Logger(
     options,
     data,
     () => cachingData[key],
-    () => fetchingData[key]
+    () => fetchingData[key],
   ).groupCollapsed("doCache");
   const hasCaching = has(cachingData, key);
 
@@ -170,14 +169,14 @@ function doCache<T>(
 
 function doRevalidate<T>(
   options: UseFetchOptionType<T>,
-  data: FetcherDataType
+  data: FetcherDataType,
 ) {
   const key = JSON.stringify({ url: data.url, options: data.options });
   const { debug, groupEnd } = new Logger(
     options,
     data,
     () => cachingData[key],
-    () => fetchingData[key]
+    () => fetchingData[key],
   ).groupCollapsed("doRevalidate");
   const hasCaching = has(cachingData, key);
 
@@ -257,13 +256,13 @@ const defaultUseFetchOptions = {
 const useFetch = <T>(
   method: UseFetchMethodEnum,
   uri: string,
-  options: Partial<UseFetchOptionType<T>> = {}
+  options: Partial<UseFetchOptionType<T>> = {},
 ): [
   T | undefined,
   (data?: UseFetchDataType) => Promise<T | undefined>,
   boolean,
   unknown,
-  Dispatch<SetStateAction<T | undefined>>
+  Dispatch<SetStateAction<T | undefined>>,
 ] => {
   const { toHref } = useRouter();
 
@@ -288,7 +287,7 @@ const useFetch = <T>(
 
         return objValue;
       }),
-    [options]
+    [options],
   );
 
   const fetcher = useCallback(
@@ -299,14 +298,14 @@ const useFetch = <T>(
         start();
 
         let useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
-          defaultUseFetchOptions
+          defaultUseFetchOptions,
         );
 
         if (!useFetchOptions.baseURL) {
           throw new Error(
             "Base URL not found. Please provide by one of ways:\n" +
               "\tPassing 'baseURL' into option of hook's param.\n" +
-              "\tSetting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file."
+              "\tSetting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file.",
           );
         }
 
@@ -366,7 +365,9 @@ const useFetch = <T>(
         }
 
         doRevalidate(useFetchOptions, fetcherData);
+
         let response = doCache(useFetchOptions, fetcherData);
+
         response
           ? doFetch(useFetchOptions, fetcherData)
           : (response = await doFetch(useFetchOptions, fetcherData));
@@ -377,7 +378,7 @@ const useFetch = <T>(
           data,
           undefined,
           undefined,
-          formattedResponse
+          formattedResponse,
         );
 
         setData(formattedResponse);
@@ -393,7 +394,17 @@ const useFetch = <T>(
         new Logger(data).debug`End fetching`.groupEnd();
       }
     },
-    [uri, method, start, stop, setData, setError]
+    [
+      uri,
+      method,
+      start,
+      stop,
+      setData,
+      setError,
+      getUseFetchOptions,
+      toHref,
+      options,
+    ],
   );
 
   return [data, fetcher, isFetching, error, setData];

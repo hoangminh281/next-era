@@ -1,9 +1,9 @@
-import { Compiler } from "webpack";
-import * as fs from "fs";
-import * as path from "path";
-import * as crypto from "crypto";
 import { NextEraPluginType } from "@/src/sw/lib/definitions.js";
+import * as crypto from "crypto";
+import * as fs from "fs";
 import _ from "lodash";
+import * as path from "path";
+import { Compiler } from "webpack";
 
 export default class NextEraPlugin {
   #options: NextEraPluginType & {
@@ -49,8 +49,8 @@ export default class NextEraPlugin {
         outputFile,
         sw.replace(
           /(addResourcesToCache)\([^\)]*\)/,
-          `$1(${JSON.stringify(this.#options.sw.resources)})`
-        )
+          `$1(${JSON.stringify(this.#options.sw.resources)})`,
+        ),
       );
 
       const md5 = this.readMD5Sync(inputFile);
@@ -61,7 +61,7 @@ export default class NextEraPlugin {
 
       fs.writeFileSync(
         this.#options.sw.component,
-        component.replaceAll(/\/sw\.js(?:\?v=[\w]+)?/g, `/sw.js?v=${md5}`)
+        component.replaceAll(/\/sw\.js(?:\?v=[\w]+)?/g, `/sw.js?v=${md5}`),
       );
     });
   }

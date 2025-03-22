@@ -1,4 +1,3 @@
-import { UseRouterType } from "./lib/definitions.js";
 import {
   isEmpty,
   isObject,
@@ -13,6 +12,7 @@ import {
 import { flattenDeep } from "next-era/utils";
 import { useRouter as useNextRouter } from "next/navigation.js";
 import { useCallback } from "react";
+import { UseRouterType } from "./lib/definitions.js";
 
 /**
  * Enhanced useRouter of next/navigation, the hook's allow to pass a object with path and option to push or convert to string URL by toHref.
@@ -65,13 +65,13 @@ const useRouter = () => {
         const search = new URLSearchParams(
           mapValues(
             flattenDeep(omitBy(href.options.searchParams, isUndefined)),
-            toString
-          )
+            toString,
+          ),
         ).toString();
 
         templateSettings.interpolate = /:([^\/]+)/g;
         uri = template(href.path)(
-          mapValues(href.options.params, encodeURIComponent)
+          mapValues(href.options.params, encodeURIComponent),
         );
         query = search ? "?" + search : "";
       }
@@ -82,13 +82,16 @@ const useRouter = () => {
     return "";
   }, []);
 
-  const push = useCallback((href: UseRouterType) => {
-    const uri = toHref(href);
+  const push = useCallback(
+    (href: UseRouterType) => {
+      const uri = toHref(href);
 
-    if (!isEmpty(uri)) {
-      router.push(uri);
-    }
-  }, []);
+      if (!isEmpty(uri)) {
+        router.push(uri);
+      }
+    },
+    [router, toHref],
+  );
 
   return {
     ...router,

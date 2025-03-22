@@ -1,6 +1,6 @@
+import { isFunction, isNil } from "lodash";
 import { Session } from "next-auth";
 import { toCamelKey } from "../utils/index.js";
-import { isFunction, isNil } from "lodash";
 import { DBError, DBErrorCodeEnum } from "./lib/definitions.js";
 
 /**
@@ -11,18 +11,18 @@ import { DBError, DBErrorCodeEnum } from "./lib/definitions.js";
 export default function Factory<T>(
   obj:
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[]
+    | Record<string, string | number | null>[],
 ) {
   const entity = toCamelKey<T>(obj);
 
   return {
-    to: async <K extends { auth: () => Promise<Session> } | {}>(
-      ctor: new (obj: T) => K
+    to: async <K extends Partial<{ auth: () => Promise<Session> }>>(
+      ctor: new (obj: T) => K,
     ) => {
       if (isNil(entity)) {
         throw new DBError(
           "Entity could not be found",
-          DBErrorCodeEnum.NotFound
+          DBErrorCodeEnum.NotFound,
         );
       }
 
@@ -34,8 +34,8 @@ export default function Factory<T>(
 
       return instance;
     },
-    toArray: async <K extends { auth: () => Promise<Session> } | {}>(
-      ctor: new (obj: T) => K
+    toArray: async <K extends Partial<{ auth: () => Promise<Session> }>>(
+      ctor: new (obj: T) => K,
     ) => {
       return await Promise.all(
         (entity as T[]).map(async (o) => {
@@ -46,7 +46,7 @@ export default function Factory<T>(
           }
 
           return instance;
-        })
+        }),
       );
     },
     toCamelKey: () => entity,

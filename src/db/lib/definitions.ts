@@ -4,8 +4,8 @@ import { isObject } from "lodash";
 export type SQLPluginType = {
   query: (
     query: string,
-    values?: GlobalContextParameterizedValueType[]
-  ) => Promise<{ rows: any[] }>;
+    values?: GlobalContextParameterizedValueType[],
+  ) => Promise<{ rows: unknown[] }>;
 };
 
 export type GlobalContextParameterizedValueType =
@@ -17,7 +17,7 @@ export type GlobalContextParameterizedValueType =
 
 export type GlobalContextType = {
   parameterized: { values: GlobalContextParameterizedValueType[] };
-  transaction?: {} | boolean;
+  transaction?: boolean;
 };
 
 export type LocalContextType = {
@@ -104,7 +104,7 @@ export class DBError extends Error {
 
   constructor(
     data: string | { message: string; code: DBErrorCodeEnum },
-    code?: DBErrorCodeEnum
+    code?: DBErrorCodeEnum,
   ) {
     super(isObject(data) ? data.message : data);
     this.code = isObject(data) ? data.code : code;
@@ -114,7 +114,7 @@ export class DBError extends Error {
   static of(data: unknown, code?: DBErrorCodeEnum) {
     return new DBError(
       data as string | { message: string; code: DBErrorCodeEnum },
-      code
+      code,
     );
   }
 }
