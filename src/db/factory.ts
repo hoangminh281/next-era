@@ -10,13 +10,15 @@ import { DBError, DBErrorCodeEnum } from "./lib/definitions.js";
  */
 export default function Factory<T>(
   obj:
+    | string
+    | number
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[],
+    | (string | number | Record<string, string | number | null>)[],
 ) {
   const entity = toCamelKey<T>(obj);
 
   return {
-    to: async <K extends Partial<{ auth: () => Promise<Session> }>>(
+    to: async <K extends { auth: () => Promise<Session> } | object>(
       ctor: new (obj: T) => K,
     ) => {
       if (isNil(entity)) {
@@ -34,7 +36,7 @@ export default function Factory<T>(
 
       return instance;
     },
-    toArray: async <K extends Partial<{ auth: () => Promise<Session> }>>(
+    toArray: async <K extends { auth: () => Promise<Session> } | object>(
       ctor: new (obj: T) => K,
     ) => {
       return await Promise.all(

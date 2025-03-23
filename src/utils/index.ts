@@ -1,23 +1,4 @@
-import {
-  camelCase,
-  cloneDeep,
-  compact,
-  flatMap,
-  isArray,
-  isFunction,
-  isNil,
-  isObject,
-  isPlainObject,
-  isUndefined,
-  keys,
-  defaultsDeep as lodashDefaultsDeep,
-  flattenDepth as lodashFlattenDepth,
-  map,
-  pickBy,
-  set,
-  tail,
-  without,
-} from "lodash";
+import _ from "lodash";
 
 /**
  * Convert object keys from snakeCase to camelCase.
@@ -27,32 +8,55 @@ import {
 export function toCamelKey(obj: string | number | null): string | number | null;
 export function toCamelKey<T>(obj: Record<string, string | number | null>): T;
 export function toCamelKey<T>(
-  obj: Record<string, string | number | null>[],
-): T[];
+  obj: (string | number | Record<string, string | number | null>)[],
+): (string | number | T)[];
+export function toCamelKey<T>(
+  obj: (string | number | Record<string, string | number | null>)[],
+): (string | number | T)[];
 export function toCamelKey<T>(
   obj:
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[],
-): T | T[];
+    | (string | number | Record<string, string | number | null>)[],
+): T | (string | number | T)[];
+export function toCamelKey<T>(
+  obj:
+    | string
+    | Record<string, string | number | null>
+    | (string | number | Record<string, string | number | null>)[],
+): string | T | (string | number | T)[];
+export function toCamelKey<T>(
+  obj:
+    | string
+    | number
+    | Record<string, string | number | null>
+    | (string | number | Record<string, string | number | null>)[],
+): string | number | T | (string | number | T)[];
+export function toCamelKey<T>(
+  obj:
+    | string
+    | number
+    | Record<string, string | number | null>
+    | (string | number | Record<string, string | number | null>)[],
+): string | number | T | (string | number | T)[];
 export function toCamelKey<T>(
   obj:
     | null
     | string
     | number
     | Record<string, string | number | null>
-    | Record<string, string | number | null>[],
-): null | string | number | T | T[] {
-  if (isNil(obj) || typeof obj !== "object") {
+    | (string | number | Record<string, string | number | null>)[],
+): null | string | number | T | (string | number | T)[] {
+  if (_.isNil(obj) || typeof obj !== "object") {
     return obj; // Return the value if it's not an object
   }
 
-  if (isArray(obj)) {
-    return map(obj, toCamelKey) as T[]; // Recursively process arrays
+  if (_.isArray(obj)) {
+    return _.map(obj, toCamelKey) as T[]; // Recursively process arrays
   }
 
-  return keys(obj).reduce(
+  return _.keys(obj).reduce(
     (result: Record<string, string | number | null>, key) => {
-      const camelKey = camelCase(key);
+      const camelKey = _.camelCase(key);
       result[camelKey] = toCamelKey(obj[key]); // Recursively process nested objects
 
       return result;
@@ -73,11 +77,11 @@ export function between(
 ) {
   if (array.length < 2) return array; // No need to insert anything
 
-  return flatMap(array, (item, index) =>
+  return _.flatMap(array, (item, index) =>
     index < array.length - 1
       ? [
           item,
-          isFunction(separator) ? separator(array.length + index) : separator,
+          _.isFunction(separator) ? separator(array.length + index) : separator,
         ]
       : [item],
   );
@@ -89,23 +93,20 @@ export function between(
  * @returns A new object merged deeply.
  */
 export function defaultsDeep<T>(...params: T[]) {
-  const _params = cloneDeep(params);
+  const _params = _.cloneDeep(params);
 
-  return lodashDefaultsDeep(_params[0], ...tail(_params)) as T;
+  return _.defaultsDeep(_params[0], ..._.tail(_params)) as T;
 }
 
 function doFlattenDeep(
-  result: Record<string, string | number | undefined>,
-  object?: Record<
-    string,
-    string | number | Record<string, string | number | undefined> | undefined
-  >,
+  result: Record<string, unknown>,
+  object?: Partial<Record<string, unknown>>,
   path: string[] = [],
 ) {
-  map(object, (value, key) => {
-    if (isObject(value)) {
+  _.map(object, (value, key) => {
+    if (_.isObject(value)) {
       doFlattenDeep(result, value, [...path, key]);
-    } else if (!isUndefined(value)) {
+    } else if (!_.isUndefined(value)) {
       result[[...path, key].join(".")] = value;
     }
   });
@@ -120,27 +121,12 @@ function doFlattenDeep(
  * @param object The object to flatten.
  */
 export function flattenDeep(
-  object?: Record<
-    string,
-    string | number | Record<string, string | number | undefined> | undefined
-  >,
-): Record<string, string | number>;
-export function flattenDeep(
-  object?: (string | number | undefined)[],
-): (string | number)[];
-export function flattenDeep(
-  object?:
-    | Record<
-        string,
-        | string
-        | number
-        | Record<string, string | number | undefined>
-        | undefined
-      >
-    | (string | number | undefined)[],
-) {
-  if (isArray(object)) {
-    return lodashFlattenDepth(without(object, undefined));
+  object?: Record<string, unknown>,
+): Record<string, unknown>;
+export function flattenDeep(object?: unknown[]): unknown[];
+export function flattenDeep(object?: Record<string, unknown> | unknown[]) {
+  if (_.isArray(object)) {
+    return _.flattenDeep(_.without(object, undefined));
   }
 
   const result = {};
@@ -166,19 +152,19 @@ export function unflattenDeep<T = Record<string, string | number>>(
 ) {
   const result = {};
 
-  map(object, (value, key) => {
-    set(result, key, value);
+  _.map(object, (value, key) => {
+    _.set(result, key, value);
   });
 
   return result as Partial<T>;
 }
 
 export function clsx(...args: unknown[]) {
-  return compact(
-    lodashFlattenDepth(
-      map(args, (value) => {
-        if (isPlainObject(value)) {
-          return keys(pickBy(value as Record<string, unknown>, Boolean));
+  return _.compact(
+    _.flatMapDeep(
+      _.map(args, (value) => {
+        if (_.isPlainObject(value)) {
+          return _.keys(_.pickBy(value as Record<string, unknown>, Boolean));
         }
 
         return value;
@@ -187,12 +173,72 @@ export function clsx(...args: unknown[]) {
   ).join(" ");
 }
 
+export function interpolate(regex: RegExp, flag?: string) {
+  return {
+    template: function (content: string) {
+      return {
+        compiled: function (value: Record<string, unknown>) {
+          const regExp = RegExp(regex, flag);
+          const flattenDeepValue = flattenDeep(value);
+
+          _.map([...content.matchAll(regExp)], ([match, ...keys]) => {
+            _.map(_.compact(keys), (key) => {
+              if (_.isUndefined(flattenDeepValue[key])) {
+                return;
+              }
+
+              content = _.replace(
+                content,
+                match,
+                String(flattenDeepValue[key]),
+              );
+            });
+          });
+
+          return content;
+        },
+      };
+    },
+  };
+}
+
+/**
+ * Normalize path by replacing backslashes with slashes.
+ * @param path The path to normalize.
+ * @returns A new path normalized.
+ */
+export function normalizePath(path: string) {
+  return _.replace(path, /\\/g, "/");
+}
+
+/**
+ * Create a wildcard pattern matcher. Example: `wildcardize("*.js").test("index.js")`
+ * @param pattern The wildcard pattern to match.
+ * @returns A wildcard pattern matcher.
+ */
+export function wildcardize(pattern: string) {
+  const regex = new RegExp(
+    "^" +
+      _.escapeRegExp(pattern).replace(/\?/g, ".").replace(/\*/g, ".*") +
+      "$",
+  );
+
+  return {
+    test: function (text: string) {
+      return regex.test(text);
+    },
+  };
+}
+
 const utils = {
   between,
   defaultsDeep,
   flattenDeep,
   unflattenDeep,
   clsx,
+  interpolate,
+  normalizePath,
+  wildcardize,
 };
 
 export default utils;

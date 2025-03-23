@@ -1,9 +1,10 @@
-import { NextEraPluginType } from "@/src/sw/lib/definitions.js";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import _ from "lodash";
 import * as path from "path";
 import { Compiler } from "webpack";
+import { interpolate, normalizePath } from "../utils/index.js";
+import { NextEraPluginType } from "./lib/definitions.js";
 
 export default class NextEraPlugin {
   #options: NextEraPluginType & {
@@ -20,9 +21,38 @@ export default class NextEraPlugin {
         input: "node_modules/next-era/dist/sw/public/sw.js",
         component: "node_modules/next-era/dist/sw/component.js",
         output: "public/sw.js",
-        resources: [],
+        resources: [
+          ...(options.sw?.resources || []),
+          ...this.readFiles("public", ["/sw.js"]),
+        ],
+        strategy: {
+          nf: [...(options.sw?.strategy.nf || [])],
+          swr: [...(options.sw?.strategy.swr || []), "/api"],
+          cf: [...(options.sw?.strategy.cf || []), "/"],
+        },
       },
     });
+  }
+
+  doReadFiles = (dir: string, parentPath: string, files: string[]) => {
+    fs.readdirSync(dir, { withFileTypes: true }).map((entry) => {
+      const file = path.join(parentPath, entry.name);
+      const filePath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        this.doReadFiles(filePath, file, files);
+      } else {
+        files.push(normalizePath(file));
+      }
+    });
+  };
+
+  readFiles(dir: string, exclude: string[] = []) {
+    const files: string[] = [];
+
+    this.doReadFiles(dir, "/", files);
+
+    return _.without(files, ...exclude);
   }
 
   readMD5Sync(filePath: string) {
@@ -47,15 +77,50 @@ export default class NextEraPlugin {
 
       fs.writeFileSync(
         outputFile,
-        sw.replace(
-          /(addResourcesToCache)\([^\)]*\)/,
-          `$1(${JSON.stringify(this.#options.sw.resources)})`,
-        ),
+        interpolate(
+          /(?:\/\/[ ]*{{([\s\S]+?)}}$)|(?:\/\*[ ]*{{([\s\S]+?)}}[ ]*\*\/).*$/gm,
+        )
+          .template(sw)
+          .compiled({
+            resourcesToCache: JSON.stringify(this.#options.sw.resources),
+            task: {
+              install:
+                process.env.NODE_ENV === "development"
+                  ? "self.skipWaiting()"
+                  : undefined,
+              activate:
+                process.env.NODE_ENV === "development"
+                  ? "selve.clients.claim()"
+                  : undefined,
+            },
+            strategy: {
+              nf:
+                process.env.NODE_ENV === "development"
+                  ? JSON.stringify(["/"])
+                  : undefined,
+              swr: JSON.stringify(this.#options.sw.strategy.swr),
+              cf: JSON.stringify(this.#options.sw.strategy.cf),
+            },
+          }),
       );
 
-      const md5 = this.readMD5Sync(inputFile);
+      const md5 = this.readMD5Sync(outputFile);
+      const resourcesSize = this.#options.sw.resources.length;
+      const { nf, swr, cf } = this.#options.sw.strategy;
 
-      console.log(`[NextEraPlugin] Service worker's MD5: ${md5}`);
+      console.debug(`[NextEraPlugin] Service worker's MD5: ${md5}`);
+      console.debug(
+        `[NextEraPlugin] Service worker's resources (${resourcesSize}/${resourcesSize}): ${JSON.stringify(this.#options.sw.resources, null, " ")}`,
+      );
+      console.debug(
+        `[NextEraPlugin] Service worker's NF URIs (${nf.length}/${nf.length}): ${JSON.stringify(nf, null, " ")}`,
+      );
+      console.debug(
+        `[NextEraPlugin] Service worker's SWR URIs (${swr.length}/${swr.length}): ${JSON.stringify(swr, null, " ")}`,
+      );
+      console.debug(
+        `[NextEraPlugin] Service worker's CF URIs (${cf.length}/${cf.length}): ${JSON.stringify(cf, null, " ")}`,
+      );
 
       const component = fs.readFileSync(this.#options.sw.component, "utf8");
 

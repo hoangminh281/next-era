@@ -256,7 +256,7 @@ const defaultUseFetchOptions = {
 const useFetch = <T>(
   method: UseFetchMethodEnum,
   uri: string,
-  options: Partial<UseFetchOptionType<T>> = {},
+  options?: Partial<UseFetchOptionType<T>>,
 ): [
   T | undefined,
   (data?: UseFetchDataType) => Promise<T | undefined>,
@@ -287,7 +287,8 @@ const useFetch = <T>(
 
         return objValue;
       }),
-    [options],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 
   const fetcher = useCallback(
@@ -297,7 +298,7 @@ const useFetch = <T>(
       try {
         start();
 
-        let useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
+        const useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
           defaultUseFetchOptions,
         );
 
@@ -331,13 +332,13 @@ const useFetch = <T>(
 
         switch (method) {
           case UseFetchMethodEnum.GET:
-            useFetchOptions = getUseFetchOptions({
-              ...useFetchOptions,
-              revalidateIfStale: {
-                maxAge: 60, // 60 seconds
-                staleWhileRevalidate: 10, // 10 seconds
-              },
-            });
+            // useFetchOptions = getUseFetchOptions({
+            //   ...useFetchOptions,
+            //   revalidateIfStale: {
+            //     maxAge: 60, // 60 seconds
+            //     staleWhileRevalidate: 10, // 10 seconds
+            //   },
+            // });
 
             break;
 
@@ -394,17 +395,8 @@ const useFetch = <T>(
         new Logger(data).debug`End fetching`.groupEnd();
       }
     },
-    [
-      uri,
-      method,
-      start,
-      stop,
-      setData,
-      setError,
-      getUseFetchOptions,
-      toHref,
-      options,
-    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [uri, method, start, stop, setData, setError, getUseFetchOptions, toHref],
   );
 
   return [data, fetcher, isFetching, error, setData];

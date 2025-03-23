@@ -5,7 +5,9 @@ export type SQLPluginType = {
   query: (
     query: string,
     values?: GlobalContextParameterizedValueType[],
-  ) => Promise<{ rows: unknown[] }>;
+  ) => Promise<{
+    rows: { [column: string]: string | number }[];
+  }>;
 };
 
 export type GlobalContextParameterizedValueType =
