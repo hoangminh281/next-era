@@ -1,5 +1,4 @@
 import { isFunction, isNil } from "lodash";
-import { Session } from "next-auth";
 import { toCamelKey } from "../utils/index.js";
 import { DBError, DBErrorCodeEnum } from "./lib/definitions.js";
 
@@ -18,7 +17,7 @@ export default function Factory<T>(
   const entity = toCamelKey<T>(obj);
 
   return {
-    to: async <K extends { auth: () => Promise<Session> } | object>(
+    to: async <K extends { auth: () => Promise<unknown> } | object>(
       ctor: new (obj: T) => K,
     ) => {
       if (isNil(entity)) {
@@ -36,7 +35,7 @@ export default function Factory<T>(
 
       return instance;
     },
-    toArray: async <K extends { auth: () => Promise<Session> } | object>(
+    toArray: async <K extends { auth: () => Promise<unknown> } | object>(
       ctor: new (obj: T) => K,
     ) => {
       return await Promise.all(

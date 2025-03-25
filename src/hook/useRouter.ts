@@ -9,9 +9,9 @@ import {
   templateSettings,
   toString,
 } from "lodash";
-import { flattenDeep } from "next-era/utils";
 import { useRouter as useNextRouter } from "next/navigation.js";
 import { useCallback } from "react";
+import { flattenDeep } from "../utils/index.js";
 import { UseRouterType } from "./lib/definitions.js";
 
 /**
