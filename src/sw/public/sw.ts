@@ -250,6 +250,24 @@ selve.addEventListener("fetch", (event) => {
     return;
   }
 
+  const resources: string[] = /* {{resourcesToCache}} */ [];
+  const cfURIS: string[] = /* {{strategy.cf}} */ [];
+
+  if (
+    [...resources, ...cfURIS].some((cfURI) =>
+      wildcardize(cfURI)(event.request.url),
+    )
+  ) {
+    return event.respondWith(
+      STRATEGY.CACHE_FIRST({
+        request: event.request,
+        preloadResponsePromise: event.preloadResponse,
+        fallbackUrl: "",
+        event,
+      }),
+    );
+  }
+
   const nfURIs: string[] = /* {{strategy.nf}} */ [];
 
   if (nfURIs.some((nfURI) => wildcardize(nfURI)(event.request.url))) {
@@ -268,19 +286,6 @@ selve.addEventListener("fetch", (event) => {
   if (swrURIs.some((swrURI) => wildcardize(swrURI)(event.request.url))) {
     return event.respondWith(
       STRATEGY.STALE_WHILE_REVALIDATE({
-        request: event.request,
-        preloadResponsePromise: event.preloadResponse,
-        fallbackUrl: "",
-        event,
-      }),
-    );
-  }
-
-  const cfURIS: string[] = /* {{strategy.cf}} */ [];
-
-  if (cfURIS.some((cfURI) => wildcardize(cfURI)(event.request.url))) {
-    event.respondWith(
-      STRATEGY.CACHE_FIRST({
         request: event.request,
         preloadResponsePromise: event.preloadResponse,
         fallbackUrl: "",

@@ -26,12 +26,12 @@ export default class NextEraPlugin {
           ...this.readFiles("public", ["/sw.js"]),
         ],
         strategy: {
+          cf: _.compact([...(options.sw?.strategy.cf || [])]),
           nf: _.compact([
             ...(options.sw?.strategy.nf || []),
             process.env.NODE_ENV === "development" ? "/**" : undefined,
           ]),
           swr: _.compact([...(options.sw?.strategy.swr || [])]),
-          cf: _.compact([...(options.sw?.strategy.cf || [])]),
         },
       },
     });
@@ -97,9 +97,9 @@ export default class NextEraPlugin {
                   : undefined,
             },
             strategy: {
+              cf: JSON.stringify(this.#options.sw.strategy.cf),
               nf: JSON.stringify(this.#options.sw.strategy.nf),
               swr: JSON.stringify(this.#options.sw.strategy.swr),
-              cf: JSON.stringify(this.#options.sw.strategy.cf),
             },
           }),
       );
