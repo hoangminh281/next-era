@@ -113,13 +113,13 @@ export default class NextEraPlugin {
         `[NextEraPlugin] Service worker's resources (${resourcesSize}/${resourcesSize}): ${JSON.stringify(this.#options.sw.resources, null, " ")}`,
       );
       console.debug(
+        `[NextEraPlugin] Service worker's CF URIs (${cf.length}/${cf.length}): ${JSON.stringify(cf, null, " ")}`,
+      );
+      console.debug(
         `[NextEraPlugin] Service worker's NF URIs (${nf.length}/${nf.length}): ${JSON.stringify(nf, null, " ")}`,
       );
       console.debug(
         `[NextEraPlugin] Service worker's SWR URIs (${swr.length}/${swr.length}): ${JSON.stringify(swr, null, " ")}`,
-      );
-      console.debug(
-        `[NextEraPlugin] Service worker's CF URIs (${cf.length}/${cf.length}): ${JSON.stringify(cf, null, " ")}`,
       );
 
       const component = fs.readFileSync(this.#options.sw.component, "utf8");
