@@ -4,30 +4,6 @@ interface CacheResources {
   (resources: string[]): Promise<void>;
 }
 
-const addResourcesToCache: CacheResources = async (resources) => {
-  const cache = await caches.open(CACHE_NAME);
-
-  await cache.addAll(resources);
-};
-
-const putInCache = async (request: Request, response: Response) => {
-  const cache = await caches.open(CACHE_NAME);
-
-  await cache.put(request, response);
-};
-
-const deleteCache = async (key: string) => {
-  await caches.delete(key);
-};
-
-const deleteOldCaches = async () => {
-  const cacheKeepList = [CACHE_NAME];
-  const keyList = await caches.keys();
-  const cachesToDelete = keyList.filter((key) => !cacheKeepList.includes(key));
-
-  await Promise.all(cachesToDelete.map(deleteCache));
-};
-
 /// <reference path="https://developer.chrome.com/docs/workbox/caching-strategies-overview" />
 const STRATEGY = {
   CACHE_FIRST: async ({
@@ -194,6 +170,45 @@ const STRATEGY = {
 
 const selve = self as unknown as ServiceWorkerGlobalScope;
 
+const wildcardize = (pattern: string) => {
+  const regex = new RegExp(
+    pattern
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\\\?/g, ".") // `?` → match any single character
+      .replace(/\\\*\\\*/g, ".*") // `**` → match anything (including `/`)
+      .replace(/\\\*/g, "[^/]*") + // `*` → match anything except `/`
+      "$",
+  );
+
+  return (text: string) => {
+    return regex.test(text);
+  };
+};
+
+const addResourcesToCache: CacheResources = async (resources) => {
+  const cache = await caches.open(CACHE_NAME);
+
+  await cache.addAll(resources);
+};
+
+const putInCache = async (request: Request, response: Response) => {
+  const cache = await caches.open(CACHE_NAME);
+
+  await cache.put(request, response);
+};
+
+const deleteCache = async (key: string) => {
+  await caches.delete(key);
+};
+
+const deleteOldCaches = async () => {
+  const cacheKeepList = [CACHE_NAME];
+  const keyList = await caches.keys();
+  const cachesToDelete = keyList.filter((key) => !cacheKeepList.includes(key));
+
+  await Promise.all(cachesToDelete.map(deleteCache));
+};
+
 const enableNavigationPreload = async () => {
   if (selve.registration.navigationPreload) {
     await selve.registration.navigationPreload.enable();
@@ -237,7 +252,7 @@ selve.addEventListener("fetch", (event) => {
 
   const nfURIs: string[] = /* {{strategy.nf}} */ [];
 
-  if (nfURIs.some((nfURI) => event.request.url.includes(nfURI))) {
+  if (nfURIs.some((nfURI) => wildcardize(nfURI)(event.request.url))) {
     return event.respondWith(
       STRATEGY.NETWORK_FIRST({
         request: event.request,
@@ -250,7 +265,7 @@ selve.addEventListener("fetch", (event) => {
 
   const swrURIs: string[] = /* {{strategy.swr}} */ [];
 
-  if (swrURIs.some((swrURI) => event.request.url.includes(swrURI))) {
+  if (swrURIs.some((swrURI) => wildcardize(swrURI)(event.request.url))) {
     return event.respondWith(
       STRATEGY.STALE_WHILE_REVALIDATE({
         request: event.request,
@@ -263,7 +278,7 @@ selve.addEventListener("fetch", (event) => {
 
   const cfURIS: string[] = /* {{strategy.cf}} */ [];
 
-  if (cfURIS.some((cfURI) => event.request.url.includes(cfURI))) {
+  if (cfURIS.some((cfURI) => wildcardize(cfURI)(event.request.url))) {
     event.respondWith(
       STRATEGY.CACHE_FIRST({
         request: event.request,
