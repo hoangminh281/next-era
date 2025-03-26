@@ -1,6 +1,6 @@
-# Next Era
+# 🚀 Next Era
 
-Welcome to the **Next Era** project! This package is a comprehensive library designed to enhance the **Next.js** framework with powerful utilities and performance optimizations.
+Welcome to **Next Era**! A comprehensive library designed to supercharge your **Next.js** applications with powerful utilities and significant performance optimizations. Build faster, more efficient, and feature-rich Next.js projects with ease.
 
 ## Table of Contents
 
@@ -8,6 +8,7 @@ Welcome to the **Next Era** project! This package is a comprehensive library des
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Progressive Web App (PWA)](#progressive-web-app-pwa)
   - [Component (CSR)](#component-csr)
   - [API Routes (SSR/SSG)](#api-routes-ssrssg)
   - [Logging](#logging)
@@ -17,15 +18,16 @@ Welcome to the **Next Era** project! This package is a comprehensive library des
 
 ## Introduction
 
-**Next Era** is a powerful and flexible utility package designed to enhance **Next.js** applications by improving performance, developer experience, and adding advanced features. It provides optimized tools that integrate seamlessly with Next.js, Vercel, and Lodash.
+**Next Era** is a powerful and flexible utility package designed to supercharge your **Next.js** applications. Built with a deep understanding of **Next.js** principles and leveraging the power of **Vercel** and **Lodash**, Next Era enhances performance, developer experience, and adds advanced features to your **SSR, SSG, and CSR** Next.js projects.
 
-Built with a deep understanding of **Next.js** principles, **Next Era** offers utilities that support everything from **client-side rendering (CSR)** to **server-side rendering (SSR)** and **static site generation (SSG)**. It includes a suite of fast, minimalist tools to enhance productivity and streamline workflows.
+Tired of boilerplate or looking for optimized solutions for common Next.js tasks? Next Era provides a suite of fast, minimalist tools to boost your productivity and streamline your workflows, helping you build faster and more efficient applications.
 
 ## Features
 
-- Intuitive and easy-to-use utilities.
-- Built on top of **Next.js**, **Vercel**, and **Lodash**.
-- Optimized data fetching using **useSWC** for improved efficiency.
+- **Intuitive and Developer-Friendly Utilities:** Designed for ease of use and seamless integration into your Next.js workflow.
+- **Leverages Next.js, Vercel, and Lodash:** Built on a solid foundation of industry-leading technologies for reliability and performance.
+- **Optimized Data Fetching (Powered by SWC):** Experience improved efficiency and speed in your data fetching operations.
+- **Effortless Progressive Web App (PWA) Integration:** Transform your Next.js app into a PWA with streamlined offline support and enhanced user engagement.
 
 ## Installation
 
@@ -40,6 +42,184 @@ pnpm add next-era
 ```
 
 ## Usage
+
+### Progressive Web App (PWA)
+
+Next Era helps turn your Next.js application into a **Progressive Web App (PWA)** with efficient caching strategies to optimize performance and offline access.
+
+#### NextEraPlugin (Webpack)
+
+This plugin generates a `sw.js` file with predefined caching strategies to optimize loading times while maintaining continuous development and deployment workflows.
+
+By default, we have a static resource strategy and 3 fetching strategies [Reference](https://developer.chrome.com/docs/workbox/caching-strategies-overview) includes:
+
+##### Prefeching resource
+
+During the Service Worker installation phase, configured static resources are preloaded and cached for quick access.
+
+By default, all of assets in `public` folder will be considered as is the static resources and will be prefetched automatically.
+
+- **Example: in next.config.mjs**
+
+```ts
+import { NextEraPlugin } from "next-era/sw";
+
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NextEraPlugin({
+          sw: {
+            resources: [
+              "/manifest.webmanifest",
+              "/opengraph-image.png",
+              "/favicon.ico",
+            ], // all of assets in `public` folder and 3 assets as configuration will be prefetched
+          },
+        }),
+      );
+    }
+
+    return config;
+  },
+};
+```
+
+##### Cache First (CF)
+
+Retrieves resources from the cache first, falling back to network fetching if needed. Best for static assets.
+
+- **Example: in next.config.mjs**
+
+```ts
+import { NextEraPlugin } from "next-era/sw";
+
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NextEraPlugin({
+          sw: {
+            resources: [
+              "/manifest.webmanifest",
+              "/opengraph-image.png",
+              "/favicon.ico",
+            ],
+            strategy: {
+              cf: ["/not-found.png"], // Apply for static resources like not-found image
+            },
+          },
+        }),
+      );
+    }
+
+    return config;
+  },
+};
+```
+
+##### Network First (NF)
+
+Fetches from the network first, caching responses for future use. Ideal for dynamic data like API requests.
+
+- **Example: in next.config.mjs**
+
+```ts
+import { NextEraPlugin } from "next-era/sw";
+
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NextEraPlugin({
+          sw: {
+            resources: [
+              "/manifest.webmanifest",
+              "/opengraph-image.png",
+              "/favicon.ico",
+            ],
+            strategy: {
+              cf: ["/not-found.png"],
+              nf: ["/api/**"], // Apply for API fetching
+            },
+          },
+        }),
+      );
+    }
+
+    return config;
+  },
+};
+```
+
+##### Stale While Revalidate (SWR)
+
+Serves cached data while simultaneously fetching and updating it from the network. Suitable for page/layout data.
+
+- **Example: in next.config.mjs**
+
+```ts
+import { NextEraPlugin } from "next-era/sw";
+
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NextEraPlugin({
+          sw: {
+            resources: [
+              "/manifest.webmanifest",
+              "/opengraph-image.png",
+              "/favicon.ico",
+            ],
+            strategy: {
+              cf: ["/not-found.png"],
+              nf: ["/api/**"],
+              swr: ["/**"], // others thing such as page/layout
+            },
+          },
+        }),
+      );
+    }
+
+    return config;
+  },
+};
+```
+
+> [!CAUTION]
+> The order of strategies should be `CF → NF → SWR` to ensure optimal request handling.
+
+#### NextEraWorker (Hook Component)
+
+This component registers events for `sw.js` into the Service Worker. Place it inside `layout.tsx` within the `app` folder.
+
+Looking into the hook component, you can see `sw.js?v=` a Service Worker script URI that be attached versioning to trigger updating after code changed.
+
+- **Example: in next.config.mjs**
+
+```tsx
+import { NextEraWorker } from "next-era/sw";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <NextEraWorker />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+#### `sw.js` (Dynamic SW script)
+
+This is the script file that will be registered into the Service Worker. `sw.js` is dynamically generated and updated during build time, then placed into the `public` folder of the project.
 
 ### Component (CSR)
 
@@ -87,18 +267,7 @@ const [isEditing, enableEditing, disableEditing] = useBool();
 A flexible hook for fetching API data.
 
 - **Requires:** A base API URL configured in `.env` or passed as an option. `NEXT_ERA_API_URL` or `NEXT_PUBLIC_NEXT_ERA_API_URL` (if you're working on NextJS)
-- **Uses:** `useFetch` (inspired by SWR) for optimized data fetching.
-
-**Default SWC Config:**
-
-```json
-{
-  "revalidateIfStale": {
-    "maxAge": 60,
-    "staleWhileRevalidate": 10
-  }
-}
-```
+- **Uses:** ~~`useFetch` (inspired by SWR) for optimized data fetching.~~ `useFetch` for enhanced pass params/queries.
 
 - **Example:**
 
@@ -124,31 +293,40 @@ Enhanced version of Next.js' `useRouter` with improved path handling.
 ```tsx
 import { useRouter } from "next-era/hook";
 
-const { push, toHref } = useRouter();
+const { push } = useRouter();
 
 return (
-  <>
-    <div
-      onClick={() =>
-        push({
-          path: "/example/route/id/:id/detail",
-          options: {
-            params: { id },
-            searchParams: { page: 1, limit: 10 },
-          },
-        })
-      }
-    />
-    <Link
-      href={toHref({
+  <div
+    onClick={() =>
+      push({
         path: "/example/route/id/:id/detail",
         options: {
           params: { id },
           searchParams: { page: 1, limit: 10 },
         },
-      })}
-    />
-  </>
+      })
+    }
+  />
+);
+```
+
+- **Example #2:**
+
+```tsx
+import { useRouter } from "next-era/hook";
+
+const { toHref } = useRouter();
+
+return (
+  <Link
+    href={toHref({
+      path: "/example/route/id/:id/detail",
+      options: {
+        params: { id },
+        searchParams: { page: 1, limit: 10 },
+      },
+    })}
+  />
 );
 ```
 
@@ -164,6 +342,13 @@ Factory function for creating DTO instances.
 import { Factory } from "next-era/db";
 
 await Factory<ToType>(fromObject).to(toDTO);
+```
+
+- **Example #2:**
+
+```ts
+import { Factory } from "next-era/db";
+
 await Factory<ToType>(fromArray).toArray(toDTO);
 ```
 
@@ -171,14 +356,178 @@ await Factory<ToType>(fromArray).toArray(toDTO);
 
 A secure SQL query builder for **Vercel/Postgres**, using parameterized queries.
 
-- **Example:**
+- **Example: Select clause:**
 
 ```ts
 import { withSQL } from "next-era/db";
 
-withSQL(sqlPlugin)
-  .select({ columns: "name", from: "words", where: { name: "unknown" } })
-  .execute();
+async function get(name, createdBy) {
+  return await withSQL(sql)
+    .select({
+      columns: ["id", "name"],
+      from: "tableName",
+      where: {
+        and: {
+          name,
+          createdBy,
+        },
+      },
+      order: {
+        by: "createdDate",
+        sort,
+      },
+      limit: 20,
+      offset,
+    })
+    .execute();
+}
+```
+
+- **Example: Create clause:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function create(data: DataDTO) {
+  await withSQL(sql)
+    .create({
+      into: "tableName",
+      values: {
+        name: data.name,
+      },
+    })
+    .execute();
+}
+```
+
+- **Example: Create multi rows clause:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function creates(datas: DataType[]) {
+  await withSQL(sql)
+    .creates(
+      map(datas, (data) => ({
+        into: "tableName",
+        values: {
+          name: data.name,
+        },
+      })),
+    )
+    .execute();
+}
+```
+
+- **Example: Update clause:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function update(data: DataDTO) {
+  await withSQL(sql)
+    .update({
+      on: "tableName",
+      set: {
+        name: data.name,
+      },
+      where: {
+        and: {
+          id: data.id,
+        },
+      },
+    })
+    .execute();
+}
+```
+
+- **Example: Delete clause:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function _delete({ id, createdBy }) {
+  await withSQL(sql)
+    .delete({
+      from: "tableName",
+      where: {
+        and: {
+          id,
+          createdBy,
+        },
+      },
+    })
+    .execute();
+}
+```
+
+- **Example: Count data:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function coundByIds({
+  ids,
+  createdBy,
+}: {
+  ids: string;
+  createdBy: string;
+}): Promise<number> {
+  const count = await withSQL(sql)
+    .select({
+      from: "tableName",
+      columns: "count(*)",
+      where: {
+        and: {
+          id: {
+            in: ids,
+          },
+          createdBy,
+        },
+      },
+    })
+    .execute();
+
+  return Number(count.rows[0].count);
+}
+```
+
+- **Example: Complex clause:**
+
+```ts
+import { withSQL } from "next-era/db";
+
+async function readsSameNameById({
+  id,
+  createdBy,
+}: {
+  id: string;
+  createdBy: string;
+}) {
+  const datas = await withSQL(sql)
+    .select({
+      from: "tableName",
+      columns: ["id", "name"],
+      where: {
+        and: {
+          name: {
+            raw: withSQL(sql)
+              .select({
+                from: "tableName2",
+                columns: "name",
+                where: { id, createdBy },
+              })
+              .toRaw(),
+          },
+          createdBy,
+        },
+      },
+      limit: 20,
+    })
+    .execute();
+
+  return await Factory<WordType>(words.rows).toArray(WordDTO);
+}
 ```
 
 #### `withTransaction`
@@ -247,27 +596,76 @@ defaultsDeep(...flatMap(group)).name;
 
 #### `flattenDeep`
 
-Flattens an object deeply (useful for URL search parameters).
+Flattens an object deeply (useful for URL search parameters). This function is using for querize object params in `useRouter`.
+
+Convert from `{ ancestor: { parent: { brother: 'alex', sister: 'jessica' } }` to `{ 'ancestor.parent.brother': 'alex', 'ancestor.parent.sister': 'jessica' }`
 
 - **Example:**
 
-```ts
+```tsx
 import { flattenDeep } from "next-era/utils";
 
-flattenDeep({ ancestor: { parent: { child: 1, child: 2 } } });
-// { 'ancestor.parent.child': 1, 'ancestor.parent.child': 2 }
+export default async function Page(props: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{
+    query?: string;
+    page?: string;
+  }>;
+}) {
+  return (
+    <Form
+      breadcrumb={{
+        breadcrumbs: [
+          { label: "ancestor", href: "/ancestor" },
+          { label: "parent", href: "/parent" },
+        ],
+        submit: {
+          label: "List",
+          type: {
+            button: {
+              href: {
+                path: "/ancestor/parent/list", // be generated to href: `/ancestor/parent/list/ancestor/parent/list?ancestor.parent.brother=alex&ancestor.parent.sister=jessica`
+                options: {
+                  searchParams: {
+                    ancestor: {
+                      parent: {
+                        brother: "alex",
+                        sister: "jessica",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }}
+    />
+  );
+}
 ```
 
 #### `unflattenDeep`
 
-Restores a deeply flattened object.
+Restores a deeply flattened object. This function is using for dequerize object params from navigating with object params.
+
+Convert from `{ 'ancestor.parent.brother': 'alex', 'ancestor.parent.sister': 'jessica' }` to `{ ancestor: { parent: { brother: 'alex', sister: 'jessica' } }`
 
 - **Example:**
 
 ```ts
 import { unflattenDeep } from "next-era/utils";
 
-unflattenDeep<ToType>(await props.searchParams);
+export default async function Page(props: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{
+    [key: string]: string | number;
+  }>;
+}) {
+  const searchParams = unflattenDeep<{ tree: TreeType }>(
+    await props.searchParams,
+  ); // { ancestor: { parent: { brother: 'alex', sister: 'jessica' } }
+}
 ```
 
 ## Contributing
