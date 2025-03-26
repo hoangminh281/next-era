@@ -190,6 +190,9 @@ const nextConfig = {
 > [!CAUTION]
 > The order of strategies should be `CF → NF → SWR` to ensure optimal request handling.
 
+> [!IMPORTANT]
+> In Development mode, the Service Worker strategy will always be set to `/**` for `NF` to ensure the freshest data is fetched during coding.
+
 #### NextEraWorker (Hook Component)
 
 This component registers events for `sw.js` into the Service Worker. Place it inside `layout.tsx` within the `app` folder.
