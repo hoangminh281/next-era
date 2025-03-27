@@ -57,7 +57,7 @@ Comparison of using `Next.js` + `next-era`
 
 This plugin generates a `sw.js` file with predefined caching strategies to optimize loading times while maintaining continuous development and deployment workflows.
 
-By default, we have a static resource strategy and 3 fetching strategies [Reference](https://developer.chrome.com/docs/workbox/caching-strategies-overview) includes:
+By default, we have a static resource strategy and 3 fetching strategies [[Reference](https://developer.chrome.com/docs/workbox/caching-strategies-overview)] includes:
 
 ##### Prefeching resource
 
