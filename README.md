@@ -47,6 +47,12 @@ pnpm add next-era
 
 Next Era helps turn your Next.js application into a **Progressive Web App (PWA)** with efficient caching strategies to optimize performance and offline access.
 
+Comparison of using `Next.js` + `next-era`
+
+![Screen record about the loading time of a Next.js](https://res.cloudinary.com/dwf0elilp/image/upload/w_500/v1743060877/With_nextjs_ynvqj1.gif)
+
+![Screen record about the loading time of a Next.js + next-era](https://res.cloudinary.com/dwf0elilp/image/upload/w_500/v1743060873/With_nextjs_next-era_dlweii.gif)
+
 #### NextEraPlugin (Webpack)
 
 This plugin generates a `sw.js` file with predefined caching strategies to optimize loading times while maintaining continuous development and deployment workflows.
