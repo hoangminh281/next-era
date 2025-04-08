@@ -19,10 +19,6 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    },
     "lib": ["dom", "es2022", "webworker"]
   },
   "include": ["src"],

@@ -1,4 +1,4 @@
-import { split, uniq, without } from "lodash";
+import { split, toString, uniq, without } from "lodash";
 import { useCallback } from "react";
 import { UseFormChangeHandlerType } from "./lib/definitions.js";
 
@@ -17,7 +17,7 @@ const useFormChange = (handler: (data: UseFormChangeHandlerType) => void) => {
       handler({
         event: {
           ...event,
-          target: target,
+          target,
         },
         name: target.name.replace(/\-.*$/g, ""),
         type: target.type,
@@ -28,22 +28,26 @@ const useFormChange = (handler: (data: UseFormChangeHandlerType) => void) => {
           switch (target.type) {
             case "checkbox": {
               if (target.checked) {
-                value = uniq(
-                  without(
-                    [...split(String(defaultValue), ","), value],
-                    undefined,
-                    null,
-                    "",
+                value = toString(
+                  uniq(
+                    without(
+                      [...split(defaultValue, ","), value],
+                      undefined,
+                      null,
+                      "",
+                    ),
                   ),
                 );
               } else {
-                value = uniq(
-                  without(
-                    split(String(defaultValue), ","),
-                    value,
-                    undefined,
-                    null,
-                    "",
+                value = toString(
+                  uniq(
+                    without(
+                      split(defaultValue, ","),
+                      value,
+                      undefined,
+                      null,
+                      "",
+                    ),
                   ),
                 );
               }

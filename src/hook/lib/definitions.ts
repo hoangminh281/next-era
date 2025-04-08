@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export enum UseFetchMethodEnum {
   GET = "GET",
   POST = "POST",
@@ -5,7 +7,7 @@ export enum UseFetchMethodEnum {
   DELETE = "DELETE",
 }
 
-export type UseFetchOptionType<T> = {
+export type UseFetchOptionType_Deprecated<T> = {
   revalidateIfStale?:
     | {
         maxAge: number;
@@ -16,12 +18,28 @@ export type UseFetchOptionType<T> = {
   baseURL?: string;
 };
 
+export type UseFetchOptionType<T> = {
+  formatter: (response: ResponseType) => Promise<T>;
+  baseURL?: string;
+  defaultData?: T;
+};
+
+export type UseFetchReturnType<T> = [
+  T | undefined,
+  (data?: UseFetchDataType) => Promise<T | undefined>,
+  boolean,
+  unknown,
+  Dispatch<SetStateAction<T | undefined>>,
+  () => void,
+] & { setData: Dispatch<SetStateAction<T | undefined>>; cancel: () => void };
+
 export type FetcherBodyType = ReadableStream | XMLHttpRequestBodyInit;
 
 type FetcherOptionType = Partial<{
   method: UseFetchMethodEnum;
   headers: Record<string, string>;
   body: FetcherBodyType;
+  signal: AbortSignal;
 }>;
 
 export type FetcherDataType = {
@@ -65,5 +83,5 @@ export type UseFormChangeHandlerType = {
   name: string;
   type: string;
   checked: boolean;
-  value: (defaultValue: unknown) => unknown;
+  value: (defaultValue: string | null | undefined) => string;
 };

@@ -1,5 +1,13 @@
-import { assignWith, isPlainObject, isUndefined, omit, unset } from "lodash";
-import { useCallback, useRef, useState } from "react";
+import {
+  assignWith,
+  has,
+  isObject,
+  isPlainObject,
+  isUndefined,
+  omit,
+  unset,
+} from "lodash";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { Logger } from "../log/index.js";
 import {
   FetcherBodyType,
@@ -7,13 +15,20 @@ import {
   ResponseType,
   UseFetchDataType,
   UseFetchMethodEnum,
-  UseFetchOptionType,
+  UseFetchOptionType_Deprecated,
   UseFetchPlainDataType,
-  UseFetchReturnType,
 } from "./lib/definitions.js";
 import { useBool } from "./useBool.js";
 import useRouter from "./useRouter.js";
 
+const cachingData: Record<
+  string,
+  {
+    response: ResponseType;
+    isToggle: boolean;
+    revalidateIfStale: { isStale: boolean; timestamp: number };
+  }
+> = {};
 const fetchingData: Record<
   string,
   {
@@ -23,7 +38,7 @@ const fetchingData: Record<
 > = {};
 
 function doFetch<T>(
-  options: UseFetchOptionType<T>,
+  options: UseFetchOptionType_Deprecated<T>,
   data: FetcherDataType,
 ): Promise<ResponseType> {
   return new Promise(async (resolve, reject) => {
@@ -34,10 +49,22 @@ function doFetch<T>(
     const { debug, error, groupEnd } = new Logger(
       options,
       data,
+      () => cachingData[key],
       () => fetchingData[key],
     ).groupCollapsed("doFetch");
 
     try {
+      const hasCaching = has(cachingData, key);
+
+      if (hasCaching) {
+        if (!cachingData[key].revalidateIfStale.isStale) {
+          // Caching data is living, do not fetch
+          debug`Caching data is living, stop fetching`.groupEnd();
+
+          return resolve(cachingData[key].response);
+        }
+      }
+
       // Saving promise for waiting until completing fetching
       fetchingData[key] = [...(fetchingData[key] || []), { resolve, reject }];
       debug`Saving promise for waiting until completing fetching`;
@@ -60,6 +87,19 @@ function doFetch<T>(
         data: (await fetched.json()).data,
       };
       debug`Complete fetching`;
+
+      if (isObject(options.revalidateIfStale)) {
+        // Saving response to caching data
+        cachingData[key] = {
+          response,
+          isToggle: false,
+          revalidateIfStale: {
+            isStale: false,
+            timestamp: Date.now(),
+          },
+        };
+        debug`Saving response to caching data`;
+      }
 
       let promise;
       let index = 1;
@@ -92,7 +132,105 @@ function doFetch<T>(
   });
 }
 
+function doCache<T>(
+  options: UseFetchOptionType_Deprecated<T>,
+  data: FetcherDataType,
+): ResponseType | undefined {
+  const key = JSON.stringify({ url: data.url, options: data.options });
+  const { debug } = new Logger(
+    options,
+    data,
+    () => cachingData[key],
+    () => fetchingData[key],
+  ).groupCollapsed("doCache");
+  const hasCaching = has(cachingData, key);
+
+  if (!hasCaching) {
+    // Caching data is not found, going to fetch
+    debug`Caching data is not found`.groupEnd();
+
+    return;
+  }
+
+  if (!cachingData[key].isToggle) {
+    // Caching data is turned off, going to fetch
+    debug`Caching data is turned off`.groupEnd();
+
+    return;
+  }
+
+  // Caching data is living or staling, valid to use
+  // For live status: use caching data, do not fetching
+  // For stale status: use caching data, going to fetch
+  debug`Caching data is living or staling, valid to use`.groupEnd();
+
+  return cachingData[key].response;
+}
+
+function doRevalidate<T>(
+  options: UseFetchOptionType_Deprecated<T>,
+  data: FetcherDataType,
+) {
+  const key = JSON.stringify({ url: data.url, options: data.options });
+  const { debug, groupEnd } = new Logger(
+    options,
+    data,
+    () => cachingData[key],
+    () => fetchingData[key],
+  ).groupCollapsed("doRevalidate");
+  const hasCaching = has(cachingData, key);
+
+  if (!hasCaching) {
+    // Caching data is not found, going to fetch
+    debug`Caching data is not found`.groupEnd();
+
+    return;
+  }
+
+  if (!isObject(options.revalidateIfStale)) {
+    // RevalidateIfStale is not toggled, turn caching data off, going to fetch
+    cachingData[key].isToggle = false;
+    debug`revalidateIfStale is turned off`.groupEnd();
+
+    return;
+  } else {
+    // RevalidateIfStale is toggled, turn caching data on
+    cachingData[key].isToggle = true;
+    debug`revalidateIfStale is turned on`;
+  }
+
+  if (!cachingData[key].revalidateIfStale.isStale) {
+    // Caching data is living, checking if still living
+    const isExpired =
+      Date.now() - cachingData[key].revalidateIfStale.timestamp >
+      options.revalidateIfStale.maxAge;
+
+    if (isExpired) {
+      // Caching data is staled
+      cachingData[key].revalidateIfStale.isStale = true;
+      cachingData[key].revalidateIfStale.timestamp = Date.now();
+      debug`Caching data is staled`;
+    } else {
+      // Caching data is living
+      debug`Caching data is living`;
+    }
+  } else {
+    // Caching data is staled, checking if still stale
+    const isExpired =
+      Date.now() - cachingData[key].revalidateIfStale.timestamp >
+      options.revalidateIfStale.staleWhileRevalidate;
+
+    if (isExpired) {
+      // Caching data is spoiled, remove it out
+      unset(cachingData, key);
+      debug`Caching data is spoiled`;
+    }
+  }
+  groupEnd();
+}
+
 const defaultUseFetchOptions = {
+  revalidateIfStale: false,
   formatter: async <T>(response: ResponseType) =>
     Promise.resolve(response?.data as T),
   baseURL:
@@ -100,7 +238,17 @@ const defaultUseFetchOptions = {
 };
 
 /**
+ * @deprecated May be removed in the future. Please use `useFetch` instead.
  * Hook to fetch data from API. To use this hook, you need to provide the base URL of the API in config file. If you don't provide, it will throw an error: "Base URL not found. Please provide by one of ways: Passing 'baseURL' into option of hook's param. Setting 'NEXT_ERA_API_URL' or 'NEXT_PUBLIC_NEXT_ERA_API_URL' (if you're working on NextJS) in '.env' config file."
+ * The hook's using the concept of useSWC from SWR library, but it's more simple and easy to use. Default configuration of swc is:
+ * ```json
+ * {
+ *    revalidateIfStale: {
+ *      maxAge: 60, // 60 seconds
+ *      staleWhileRevalidate: 10, // 10 seconds
+ *    },
+ * }
+ * ```
  * @param method standard RESTful method to fetch data
  * @param uri URI of the API
  * @param options options of the hook
@@ -109,18 +257,22 @@ const defaultUseFetchOptions = {
 const useFetch = <T>(
   method: UseFetchMethodEnum,
   uri: string,
-  options?: Partial<UseFetchOptionType<T>>,
-): UseFetchReturnType<T> => {
+  options?: Partial<UseFetchOptionType_Deprecated<T>>,
+): [
+  T | undefined,
+  (data?: UseFetchDataType) => Promise<T | undefined>,
+  boolean,
+  unknown,
+  Dispatch<SetStateAction<T | undefined>>,
+] => {
   const { toHref } = useRouter();
 
-  const [data, setData] = useState<T | undefined>(options?.defaultData);
+  const [data, setData] = useState<T>();
   const [isFetching, start, stop] = useBool();
   const [error, setError] = useState<unknown>();
 
-  const controller = useRef<AbortController>();
-
   const getUseFetchOptions = useCallback(
-    (defaultOptions: UseFetchOptionType<T>) =>
+    (defaultOptions: UseFetchOptionType_Deprecated<T>) =>
       assignWith({}, options, defaultOptions, (objValue, srcValue) => {
         if (isUndefined(objValue)) {
           return srcValue;
@@ -147,9 +299,8 @@ const useFetch = <T>(
       try {
         start();
 
-        const useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
-          defaultUseFetchOptions,
-        );
+        const useFetchOptions: UseFetchOptionType_Deprecated<T> =
+          getUseFetchOptions(defaultUseFetchOptions);
 
         if (!useFetchOptions.baseURL) {
           throw new Error(
@@ -175,23 +326,26 @@ const useFetch = <T>(
           body = omit(data, ["params", "searchParams"]);
         }
 
-        controller.current = new AbortController();
         const fetcherData: FetcherDataType = {
           url: new URL(path, useFetchOptions.baseURL).toString(),
-          options: {
-            signal: controller.current.signal,
-          },
         };
 
         switch (method) {
           case UseFetchMethodEnum.GET:
+            // useFetchOptions = getUseFetchOptions({
+            //   ...useFetchOptions,
+            //   revalidateIfStale: {
+            //     maxAge: 60, // 60 seconds
+            //     staleWhileRevalidate: 10, // 10 seconds
+            //   },
+            // });
+
             break;
 
           case UseFetchMethodEnum.POST:
           case UseFetchMethodEnum.PUT:
             if (!isPlainObject(body)) {
               fetcherData.options = {
-                ...fetcherData.options,
                 method,
                 body: body as FetcherBodyType,
               };
@@ -201,7 +355,6 @@ const useFetch = <T>(
 
           default:
             fetcherData.options = {
-              ...fetcherData.options,
               headers: {
                 "Content-Type": "application/json",
               },
@@ -212,7 +365,13 @@ const useFetch = <T>(
             break;
         }
 
-        const response = await doFetch(useFetchOptions, fetcherData);
+        doRevalidate(useFetchOptions, fetcherData);
+
+        let response = doCache(useFetchOptions, fetcherData);
+
+        response
+          ? doFetch(useFetchOptions, fetcherData)
+          : (response = await doFetch(useFetchOptions, fetcherData));
 
         const formattedResponse = await useFetchOptions.formatter(response);
         const { debug } = new Logger(
@@ -240,21 +399,7 @@ const useFetch = <T>(
     [uri, method, start, stop, setData, setError, getUseFetchOptions, toHref],
   );
 
-  const cancel = useCallback(() => controller.current?.abort(), []);
-
-  const useFetcher = [
-    data,
-    fetcher,
-    isFetching,
-    error,
-    setData,
-    cancel,
-  ] as UseFetchReturnType<T>;
-
-  useFetcher.setData = setData;
-  useFetcher.cancel = cancel;
-
-  return useFetcher;
+  return [data, fetcher, isFetching, error, setData];
 };
 
 export default useFetch;

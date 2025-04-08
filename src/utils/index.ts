@@ -100,12 +100,15 @@ export function defaultsDeep<T>(...params: T[]) {
 
 function doFlattenDeep(
   result: Record<string, unknown>,
-  object?: Partial<Record<string, unknown>>,
+  object?: unknown[] | Partial<Record<string, unknown>>,
   path: string[] = [],
 ) {
   _.map(object, (value, key) => {
-    if (_.isObject(value)) {
-      doFlattenDeep(result, value, [...path, key]);
+    if (_.isPlainObject(value)) {
+      doFlattenDeep(result, value as Partial<Record<string, unknown>>, [
+        ...path,
+        key,
+      ]);
     } else if (!_.isUndefined(value)) {
       result[[...path, key].join(".")] = value;
     }
@@ -125,10 +128,6 @@ export function flattenDeep(
 ): Record<string, unknown>;
 export function flattenDeep(object?: unknown[]): unknown[];
 export function flattenDeep(object?: Record<string, unknown> | unknown[]) {
-  if (_.isArray(object)) {
-    return _.flattenDeep(_.without(object, undefined));
-  }
-
   const result = {};
 
   doFlattenDeep(result, object);
@@ -230,6 +229,31 @@ export function wildcardize(pattern: string) {
   };
 }
 
+/**
+ * Converts a string to snake_case while preserving special characters.
+ *
+ * This function:
+ * - Inserts underscores between camelCase or PascalCase transitions.
+ * - Replaces spaces with underscores.
+ * - Collapses multiple underscores.
+ * - Converts all characters to lowercase.
+ * - Keeps special characters (e.g., !@#$%) intact.
+ *
+ * @param {string} str - The input string to convert.
+ * @returns {string} The snake_case formatted string with special characters preserved.
+ */
+export function snakeCase(str: string | undefined) {
+  if (!_.isString(str)) {
+    return str;
+  }
+
+  return str
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2") // handle camelCase or PascalCase
+    .replace(/\s+/g, "_") // replace spaces with underscores
+    .replace(/_+/g, "_") // collapse multiple underscores
+    .toLowerCase();
+}
+
 const utils = {
   between,
   defaultsDeep,
@@ -239,6 +263,7 @@ const utils = {
   interpolate,
   normalizePath,
   wildcardize,
+  snakeCase,
 };
 
 export default utils;

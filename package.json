@@ -47,11 +47,11 @@
     }
   },
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "rimraf dist",
     "test": "node dist/test.js",
     "lint": "pnpm eslint . --fix",
     "format": "pnpm prettier --write . --log-level silent",
-    "build": "pnpm format && pnpm lint && pnpm clean && tsc"
+    "build": "pnpm audit && pnpm format && pnpm lint && pnpm clean && tsc"
   },
   "engines": {
     "node": ">=20.12.0"
@@ -62,7 +62,7 @@
     "@types/react": "18.3.3",
     "@types/webpack": "5.28.5",
     "lodash": "4.17.21",
-    "next": "15.3.0-canary.1",
+    "next": "15.3.0-canary.33",
     "react": "19.0.0-rc-f38c22b244-20240704"
   },
   "dependencies": {
@@ -79,6 +79,7 @@
     "eslint-config-next": "15.2.3",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
+    "rimraf": "6.0.1",
     "typescript": "5.5.2"
   }
 }
