@@ -51,7 +51,7 @@
     "test": "node dist/test.js",
     "lint": "pnpm eslint . --fix",
     "format": "pnpm prettier --write . --log-level silent",
-    "build": "pnpm format && pnpm lint && pnpm clean && tsc"
+    "build": "pnpm audit && pnpm format && pnpm lint && pnpm clean && tsc"
   },
   "engines": {
     "node": ">=20.12.0"

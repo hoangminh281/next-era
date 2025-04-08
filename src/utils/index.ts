@@ -100,12 +100,15 @@ export function defaultsDeep<T>(...params: T[]) {
 
 function doFlattenDeep(
   result: Record<string, unknown>,
-  object?: Partial<Record<string, unknown>>,
+  object?: unknown[] | Partial<Record<string, unknown>>,
   path: string[] = [],
 ) {
   _.map(object, (value, key) => {
-    if (_.isObject(value)) {
-      doFlattenDeep(result, value, [...path, key]);
+    if (_.isPlainObject(value)) {
+      doFlattenDeep(result, value as Partial<Record<string, unknown>>, [
+        ...path,
+        key,
+      ]);
     } else if (!_.isUndefined(value)) {
       result[[...path, key].join(".")] = value;
     }
@@ -125,10 +128,6 @@ export function flattenDeep(
 ): Record<string, unknown>;
 export function flattenDeep(object?: unknown[]): unknown[];
 export function flattenDeep(object?: Record<string, unknown> | unknown[]) {
-  if (_.isArray(object)) {
-    return _.flattenDeep(_.without(object, undefined));
-  }
-
   const result = {};
 
   doFlattenDeep(result, object);
