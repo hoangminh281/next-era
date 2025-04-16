@@ -6,7 +6,6 @@ import {
   LocalContextType,
   OrderBuildType,
   OrderByValueType,
-  OrderClauseType,
   RawType,
   SortEnum,
   WhereBuildType,
@@ -128,6 +127,21 @@ const where = {
 
     return `${snakeCase(nth(localContext.keyPath, -2))} = (${query})`;
   },
+  isColumn: function (
+    { value }: { value: string },
+    localContext: LocalContextType,
+    globalContext: GlobalContextType,
+  ) {
+    const { debug } = new Logger(
+      value,
+      localContext,
+      globalContext,
+    ).groupCollapsed("raw");
+
+    debug`Building isColumn clause`;
+
+    return `${snakeCase(nth(localContext.keyPath, -2))}::TEXT = ${snakeCase(value)}::TEXT`;
+  },
   default: function (
     { value, build }: { value: WhereValueType } & { build: WhereBuildType },
     localContext: LocalContextType,
@@ -159,10 +173,7 @@ const where = {
 
 const order = {
   by: function (
-    {
-      value,
-      build,
-    }: { value: string | OrderByValueType; build: OrderBuildType },
+    { value, build }: { value: OrderByValueType; build: OrderBuildType },
     localContext: LocalContextType,
     globalContext: GlobalContextType,
   ) {
@@ -220,7 +231,7 @@ const order = {
     }, ',')::TEXT[], ${snakeCase(nth(localContext.keyPath, -2))}::TEXT)`;
   },
   default: function (
-    { value, build }: { value: OrderClauseType; build: OrderBuildType },
+    { value, build }: { value: OrderByValueType; build: OrderBuildType },
     localContext: LocalContextType,
     globalContext: GlobalContextType,
   ) {

@@ -24,7 +24,7 @@ export type LocalContextType = {
 };
 
 export type WhereSchemaType = {
-  where: WhereClauseType;
+  where?: WhereClauseType;
 };
 
 export type SelectSchemaType = {
@@ -38,9 +38,13 @@ export type SelectSchemaType = {
 
 export type TableClauseType =
   | string
-  | ({
+  | {
       raw: string | RawType;
-    } & { [table in Exclude<string, "raw">]: { as: string } });
+      as?: string;
+    }
+  | {
+      [alias: string]: string;
+    };
 
 export type FromClauseType = TableClauseType;
 
@@ -54,7 +58,7 @@ export enum JoinTypeEnum {
 export type JoinClauseType = {
   type: JoinTypeEnum;
   to: TableClauseType;
-  on: string | { [fromColumn: string]: string };
+  on: WhereClauseType;
 };
 
 export type RawType = {
@@ -67,19 +71,28 @@ export type WhereValueType =
   | number
   | undefined
   | null
-  | Partial<{
-      in: string;
-      isNull: boolean;
-      ilike: string;
-      raw: string | RawType;
-    }>;
+  | {
+      in?: string;
+    }
+  | {
+      isNull?: boolean;
+    }
+  | {
+      ilike?: string;
+    }
+  | {
+      raw?: string | RawType;
+    }
+  | {
+      isColumn?: string;
+    };
 
 export type WhereClauseType =
   | string
-  | (Partial<{
-      and: { [column: string]: WhereValueType };
-      or: { [column: string]: WhereValueType };
-    }> & { [column: string]: WhereValueType });
+  | ({
+      and?: { [column: string]: WhereValueType };
+      or?: { [column: string]: WhereValueType };
+    } & { [column: string]: WhereValueType });
 
 export type WhereBuildType = (
   options: { value: WhereClauseType },
@@ -92,19 +105,20 @@ export enum SortEnum {
   Desc = "DESC",
 }
 
-export type OrderByValueType = Record<
-  string,
-  {
-    in: string | undefined;
-  }
->;
+export type OrderByValueType =
+  | string
+  | {
+      [column: string]: {
+        in?: string;
+      };
+    };
 
 export type OrderClauseType =
   | string
-  | Partial<{
-      by: string | OrderByValueType;
+  | {
+      by?: OrderByValueType;
       sort?: SortEnum;
-    }>;
+    };
 
 export type OrderBuildType = (
   options: { value: OrderClauseType },

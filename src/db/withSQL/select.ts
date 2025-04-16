@@ -35,7 +35,16 @@ class Select extends Where {
     const { columns: column } = this.#schema;
     const columns = isString(column) ? [column] : column;
 
-    this._clauses.push(`SELECT ${map(columns, snakeCase)}`);
+    new Logger(column, undefined, this._globalContext).groupCollapsed(
+      "buildColumnClause",
+    ).debug`Starting build`;
+
+    const columnClause = `SELECT ${map(columns, snakeCase)}`;
+
+    new Logger(column, undefined, this._globalContext, `\`${columnClause}\``)
+      .debug`Ending build`.groupEnd();
+
+    this._clauses.push(columnClause);
 
     return this;
   }
@@ -52,29 +61,38 @@ class Select extends Where {
 
     debug`Doing build`;
 
-    if (isString(from)) {
-      debug`Data is string, return data`.groupEnd();
+    if (isObject(from)) {
+      debug`From is object`;
 
-      return [from];
-    }
+      if (has(from, "raw")) {
+        debug`From has raw`;
 
-    if (has(from, "raw")) {
-      const { raw } = from;
+        const { raw, as } = from;
+        let query = raw;
 
-      if (isString(raw)) {
-        return `(${raw})`;
+        if (isObject(raw)) {
+          debug`Raw is object, return from`.groupEnd();
+
+          this._globalContext.parameterized.values.push(...raw.values);
+
+          query = raw.query;
+        }
+
+        debug`Raw is string, return from`.groupEnd();
+        return `(${query}) ${as || ""}`;
       }
 
-      this._globalContext.parameterized.values.push(...raw.values);
+      debug`From has alias, return from`.groupEnd();
 
-      return `(${raw.query})`;
+      const as = keys(from)[0];
+      const table = values(from)[0];
+
+      return `(${snakeCase(table as string)}) ${as || ""}`;
     }
 
-    const value = values(from)[0];
+    debug`From is string, return from`.groupEnd();
 
-    return typeof value === "object" && "as" in value
-      ? `${keys(from)[0]} AS ${value.as}`
-      : `${keys(from)[0]}`;
+    return [snakeCase(from)];
   }
 
   #from() {
@@ -116,7 +134,7 @@ class Select extends Where {
     const to = this.#buildFrom({ from: join.to }, localContext);
     const on = isString(join.on)
       ? join.on
-      : `${keys(join.on)[0]}::TEXT = ${values(join.on)[0]}::TEXT`;
+      : this._buildWhere({ value: join.on }, localContext).join(" AND ");
     const joinClause = `${join.type} JOIN ${to} ON ${on}`;
 
     new Logger(join, localContext, this._globalContext, `\`${joinClause}\``)
@@ -218,14 +236,32 @@ class Select extends Where {
   #limit() {
     const { limit } = this.#schema;
 
-    limit && this._clauses.push(`LIMIT ${limit}`);
+    new Logger(limit, undefined, this._globalContext).groupCollapsed(
+      "buildColumnClause",
+    ).debug`Starting build`;
+
+    const limitClause = `LIMIT ${limit}`;
+
+    new Logger(limit, undefined, this._globalContext, `\`${limitClause}\``)
+      .debug`Ending build`.groupEnd();
+
+    limit && this._clauses.push(limitClause);
 
     return this;
   }
   #offset() {
     const { offset } = this.#schema;
 
-    offset && this._clauses.push(`OFFSET ${offset}`);
+    new Logger(offset, undefined, this._globalContext).groupCollapsed(
+      "buildColumnClause",
+    ).debug`Starting build`;
+
+    const offsetClause = `OFFSET ${offset}`;
+
+    new Logger(offset, undefined, this._globalContext, `\`${offsetClause}\``)
+      .debug`Ending build`.groupEnd();
+
+    offset && this._clauses.push(offsetClause);
 
     return this;
   }

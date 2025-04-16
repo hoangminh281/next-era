@@ -14,7 +14,7 @@ import {
   GlobalContextType,
   LocalContextType,
   SQLPluginType,
-  WhereClauseType,
+  WhereBuildType,
   WhereSchemaType,
 } from "./lib/definitions.js";
 import { Factory } from "./lib/factory.js";
@@ -56,10 +56,7 @@ class Where extends Base {
    * }
    * @returns string query. Ex: SELECT word.name FROM words as word WHERE word.id = 'uuid' AND word.created_by = 'date'
    */
-  #buildWhere = (
-    { value }: { value: WhereClauseType },
-    localContext: LocalContextType,
-  ) => {
+  _buildWhere: WhereBuildType = ({ value }, localContext) => {
     const { debug } = new Logger(
       value,
       localContext,
@@ -82,7 +79,7 @@ class Where extends Base {
           localContext.keyPath.push(key);
 
           const clause = get(Factory.where, key, Factory.where.default)(
-            { value, build: this.#buildWhere },
+            { value, build: this._buildWhere },
             localContext,
             this._globalContext,
           );
@@ -109,7 +106,7 @@ class Where extends Base {
   _where() {
     const { where } = this.#schema;
 
-    if (isEmpty(where)) {
+    if (isEmpty(where) || isUndefined(where)) {
       return this;
     }
 
@@ -119,7 +116,7 @@ class Where extends Base {
       "buildWhereClause",
     ).debug`Starting build`;
 
-    const whereClause = this.#buildWhere({ value: where }, localContext).join(
+    const whereClause = this._buildWhere({ value: where }, localContext).join(
       " AND ",
     );
 
