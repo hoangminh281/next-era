@@ -3,8 +3,12 @@ import * as fs from "fs";
 import _ from "lodash";
 import * as path from "path";
 import { Compiler } from "webpack";
-import { interpolate, normalizePath } from "../utils/index.js";
-import { NextEraPluginType } from "./lib/definitions.js";
+import { readFileNames } from "../lib/utils.js";
+import { interpolate } from "../utils/index.js";
+import {
+  NextEraPluginMethodEnum,
+  NextEraPluginType,
+} from "./lib/definitions.js";
 
 export default class NextEraPlugin {
   #options: NextEraPluginType & {
@@ -16,46 +20,38 @@ export default class NextEraPlugin {
   };
 
   constructor(options: Partial<NextEraPluginType>) {
-    this.#options = _.defaultsDeep({}, options, {
+    const nodeEnv = options.sw?.nodeEnv || process.env.NODE_ENV || "production";
+
+    this.#options = {
       sw: {
         input: "node_modules/next-era/dist/sw/public/sw.js",
         component: "node_modules/next-era/dist/sw/component.js",
         output: "public/sw.js",
-        resources: [
-          ...(options.sw?.resources || []),
-          ...this.readFiles("public", ["/sw.js"]),
-        ],
+        nodeEnv,
+        cacheName: _.get(options, "sw.cacheName", "v1"),
+        resources: _.compact(
+          _.union(
+            _.get(options, "sw.resources", []),
+            readFileNames("public", { exclude: ["/sw.js"], root: "public" }),
+          ),
+        ),
         strategy: {
-          cf: _.compact([...(options.sw?.strategy.cf || [])]),
-          nf: _.compact([
-            ...(options.sw?.strategy.nf || []),
-            process.env.NODE_ENV === "development" ? "/**" : undefined,
-          ]),
-          swr: _.compact([...(options.sw?.strategy.swr || [])]),
+          filter: _.compact(
+            _.union(_.get(options, "sw.strategy.filter", []), [
+              { method: NextEraPluginMethodEnum.GET, allow: true },
+            ]),
+          ),
+          cf: _.compact(_.get(options, "sw.strategy.cf", [])),
+          nf: _.compact(
+            _.union(
+              _.get(options, "sw.strategy.nf", []),
+              nodeEnv === "development" ? ["/**"] : undefined,
+            ),
+          ),
+          swr: _.compact(_.get(options, "sw.strategy.swr", [])),
         },
       },
-    });
-  }
-
-  doReadFiles = (dir: string, parentPath: string, files: string[]) => {
-    fs.readdirSync(dir, { withFileTypes: true }).map((entry) => {
-      const file = path.join(parentPath, entry.name);
-      const filePath = path.join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        this.doReadFiles(filePath, file, files);
-      } else {
-        files.push(normalizePath(file));
-      }
-    });
-  };
-
-  readFiles(dir: string, exclude: string[] = []) {
-    const files: string[] = [];
-
-    this.doReadFiles(dir, "/", files);
-
-    return _.without(files, ...exclude);
+    };
   }
 
   readMD5Sync(filePath: string) {
@@ -85,18 +81,20 @@ export default class NextEraPlugin {
         )
           .template(sw)
           .compiled({
-            resourcesToCache: JSON.stringify(this.#options.sw.resources),
+            cacheName: JSON.stringify(this.#options.sw.cacheName),
+            resources: JSON.stringify(this.#options.sw.resources),
             task: {
               install:
-                process.env.NODE_ENV === "development"
+                this.#options.sw.nodeEnv === "development"
                   ? "self.skipWaiting()"
                   : undefined,
               activate:
-                process.env.NODE_ENV === "development"
+                this.#options.sw.nodeEnv === "development"
                   ? "selve.clients.claim()"
                   : undefined,
             },
             strategy: {
+              filter: JSON.stringify(this.#options.sw.strategy.filter),
               cf: JSON.stringify(this.#options.sw.strategy.cf),
               nf: JSON.stringify(this.#options.sw.strategy.nf),
               swr: JSON.stringify(this.#options.sw.strategy.swr),
@@ -106,11 +104,17 @@ export default class NextEraPlugin {
 
       const md5 = this.readMD5Sync(outputFile);
       const resourcesSize = this.#options.sw.resources.length;
-      const { nf, swr, cf } = this.#options.sw.strategy;
+      const { filter, nf, swr, cf } = this.#options.sw.strategy;
 
+      console.debug(
+        `[NextEraPlugin] Service worker's cache name: ${this.#options.sw.cacheName}`,
+      );
       console.debug(`[NextEraPlugin] Service worker's MD5: ${md5}`);
       console.debug(
         `[NextEraPlugin] Service worker's resources (${resourcesSize}/${resourcesSize}): ${JSON.stringify(this.#options.sw.resources, null, " ")}`,
+      );
+      console.debug(
+        `[NextEraPlugin] Service worker's filters (${filter.length}/${filter.length}): ${JSON.stringify(filter, null, " ")}`,
       );
       console.debug(
         `[NextEraPlugin] Service worker's CF URIs (${cf.length}/${cf.length}): ${JSON.stringify(cf, null, " ")}`,

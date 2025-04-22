@@ -237,7 +237,7 @@ class Select extends Where {
     const { limit } = this.#schema;
 
     new Logger(limit, undefined, this._globalContext).groupCollapsed(
-      "buildColumnClause",
+      "buildLimitClause",
     ).debug`Starting build`;
 
     const limitClause = `LIMIT ${limit}`;
@@ -253,7 +253,7 @@ class Select extends Where {
     const { offset } = this.#schema;
 
     new Logger(offset, undefined, this._globalContext).groupCollapsed(
-      "buildColumnClause",
+      "buildOffsetClause",
     ).debug`Starting build`;
 
     const offsetClause = `OFFSET ${offset}`;

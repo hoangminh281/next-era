@@ -1,8 +1,15 @@
-const CACHE_NAME = "v1";
+const CACHE_NAME = /* {{cacheName}} */ "v1";
 
 interface CacheResources {
   (resources: string[]): Promise<void>;
 }
+
+type NextEraPluginStragegyFilterType = {
+  method?: string;
+  url?: string;
+  allow: boolean;
+  [other: string]: unknown;
+};
 
 /// <reference path="https://developer.chrome.com/docs/workbox/caching-strategies-overview" />
 const STRATEGY = {
@@ -180,9 +187,7 @@ const wildcardize = (pattern: string) => {
       "$",
   );
 
-  return (text: string) => {
-    return regex.test(text);
-  };
+  return regex;
 };
 
 const addResourcesToCache: CacheResources = async (resources) => {
@@ -209,6 +214,13 @@ const deleteOldCaches = async () => {
   await Promise.all(cachesToDelete.map(deleteCache));
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const deleteAllCaches = async () => {
+  const cachesToDelete = await caches.keys();
+
+  await Promise.all(cachesToDelete.map(deleteCache));
+};
+
 const enableNavigationPreload = async () => {
   if (selve.registration.navigationPreload) {
     await selve.registration.navigationPreload.enable();
@@ -223,7 +235,7 @@ selve.addEventListener("install", (event) => {
     `,
   );
 
-  const resources: string[] = /* {{resourcesToCache}} */ [];
+  const resources: string[] = /* {{resources}} */ [];
 
   console.debug(
     `[Service Worker] Installing resources: ${resources.length}/${resources.length}`,
@@ -245,17 +257,46 @@ selve.addEventListener("activate", (event) => {
   );
 });
 
+const isAllowedFetchEvent = (
+  {
+    request,
+  }: {
+    request: {
+      method: string;
+      url: string;
+    };
+  },
+  filters: NextEraPluginStragegyFilterType[],
+) => {
+  if (!filters.length) {
+    return false;
+  }
+
+  return filters.every((filter) => {
+    const { allow, ...attrs } = filter;
+    const match = Object.keys(attrs).every((key) => {
+      return request[key as keyof typeof request] === attrs[key];
+    });
+
+    return match ? allow : false;
+  });
+};
+
 selve.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const filter: NextEraPluginStragegyFilterType[] =
+    /* {{strategy.filter}} */ [];
+
+  if (!isAllowedFetchEvent(event, filter)) {
+    // Not allow to fetch event go through Service Worker
     return;
   }
 
-  const resources: string[] = /* {{resourcesToCache}} */ [];
+  const resources: string[] = /* {{resources}} */ [];
   const cfURIS: string[] = /* {{strategy.cf}} */ [];
 
   if (
     [...resources, ...cfURIS].some((cfURI) =>
-      wildcardize(cfURI)(event.request.url),
+      wildcardize(cfURI).test(event.request.url),
     )
   ) {
     return event.respondWith(
@@ -270,7 +311,7 @@ selve.addEventListener("fetch", (event) => {
 
   const nfURIs: string[] = /* {{strategy.nf}} */ [];
 
-  if (nfURIs.some((nfURI) => wildcardize(nfURI)(event.request.url))) {
+  if (nfURIs.some((nfURI) => wildcardize(nfURI).test(event.request.url))) {
     return event.respondWith(
       STRATEGY.NETWORK_FIRST({
         request: event.request,
@@ -283,7 +324,7 @@ selve.addEventListener("fetch", (event) => {
 
   const swrURIs: string[] = /* {{strategy.swr}} */ [];
 
-  if (swrURIs.some((swrURI) => wildcardize(swrURI)(event.request.url))) {
+  if (swrURIs.some((swrURI) => wildcardize(swrURI).test(event.request.url))) {
     return event.respondWith(
       STRATEGY.STALE_WHILE_REVALIDATE({
         request: event.request,

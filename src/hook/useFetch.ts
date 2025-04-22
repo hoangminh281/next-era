@@ -6,26 +6,24 @@ import {
   FetcherDataType,
   ResponseType,
   UseFetchDataType,
+  UseFetchErrorType,
   UseFetchMethodEnum,
   UseFetchOptionType,
   UseFetchPlainDataType,
   UseFetchReturnType,
+  UseFetchStorageType,
 } from "./lib/definitions.js";
 import { useBool } from "./useBool.js";
 import useRouter from "./useRouter.js";
 
-const fetchingData: Record<
-  string,
-  {
-    resolve: (value: ResponseType | PromiseLike<ResponseType>) => void;
-    reject: (reason?: unknown) => void;
-  }[]
-> = {};
+const fetchingStorage = {};
 
-function doFetch<T>(
-  options: UseFetchOptionType<T>,
+function doFetch<D, E>(
+  options: UseFetchOptionType<D, E>,
   data: FetcherDataType,
-): Promise<ResponseType> {
+): Promise<ResponseType<E>> {
+  const _fetchingStorage: UseFetchStorageType<E> = fetchingStorage;
+
   return new Promise(async (resolve, reject) => {
     const key = JSON.stringify({
       url: data.url,
@@ -34,67 +32,67 @@ function doFetch<T>(
     const { debug, error, groupEnd } = new Logger(
       options,
       data,
-      () => fetchingData[key],
+      () => _fetchingStorage[key],
     ).groupCollapsed("doFetch");
 
-    try {
-      // Saving promise for waiting until completing fetching
-      fetchingData[key] = [...(fetchingData[key] || []), { resolve, reject }];
-      debug`Saving promise for waiting until completing fetching`;
+    // Saving promise for waiting until completing fetching
+    _fetchingStorage[key] = [
+      ...(_fetchingStorage[key] || []),
+      { resolve, reject },
+    ];
+    debug`Saving promise for waiting until completing fetching`;
 
-      if (fetchingData[key].length > 1) {
-        // Fetching is running, do not fetch
-        debug`Fetching is running, stop fetching`.groupEnd();
+    if (_fetchingStorage[key].length > 1) {
+      // Fetching is running, do not fetch
+      debug`Fetching is running, stop fetching`.groupEnd();
 
-        return;
-      }
+      return;
+    }
 
-      // Start fetching
-      debug`Start fetching`;
+    // Start fetching
+    debug`Start fetching`;
 
-      // Running fetching
-      const fetched = await fetch(data.url, data.options);
-      const response = {
-        headers: fetched.headers,
-        status: fetched.status,
-        data: (await fetched.json()).data,
-      };
-      debug`Complete fetching`;
+    // Running fetching
+    const fetched = await fetch(data.url, data.options);
+    const response = fetched.ok
+      ? {
+          headers: fetched.headers,
+          status: fetched.status,
+          data: (await fetched.json()).data,
+        }
+      : {
+          headers: fetched.headers,
+          status: fetched.status,
+          error: JSON.parse(await fetched.text()) as E,
+        };
+    debug`Complete fetching`;
 
-      let promise;
-      let index = 1;
+    let promise;
+    let index = 1;
 
-      while (typeof (promise = fetchingData[key].shift()) !== "undefined") {
-        // Completing fetching, resolve response for saved promises
+    while (typeof (promise = _fetchingStorage[key].shift()) !== "undefined") {
+      // Completing fetching, resolve/reject response for saved promises
+      if (fetched.ok) {
         promise.resolve(response);
         debug`Resolve response for saved promise: #${index}`;
-        index++;
-      }
-
-      // Remove completed fetching data out
-      unset(fetchingData, key);
-      debug`Remove completed fetching data out`;
-    } catch (e) {
-      let promise;
-      const index = 1;
-
-      while (typeof (promise = fetchingData[key].shift()) !== "undefined") {
-        // Completing fetching, reject error for saved promises
-        promise.reject(e);
+      } else {
+        promise.reject(response);
         error`Reject error for saved promise: #${index}`;
       }
-
-      unset(fetchingData, key);
-      debug`Remove completed fetching data out`;
+      index++;
     }
+
+    // Remove completed fetching data out
+    unset(fetchingStorage, key);
+    debug`Remove completed fetching data out`;
 
     groupEnd();
   });
 }
 
 const defaultUseFetchOptions = {
-  formatter: async <T>(response: ResponseType) =>
-    Promise.resolve(response?.data as T),
+  formatter: async <D, E>(response: ResponseType<E>) =>
+    Promise.resolve(response?.data as D),
   baseURL:
     process.env.NEXT_PUBLIC_NEXT_ERA_API_URL || process.env.NEXT_ERA_API_URL,
 };
@@ -106,21 +104,21 @@ const defaultUseFetchOptions = {
  * @param options options of the hook
  * @returns state, fetcher, isFetching, error
  */
-const useFetch = <T>(
+const useFetch = <D, E = UseFetchErrorType>(
   method: UseFetchMethodEnum,
   uri: string,
-  options?: Partial<UseFetchOptionType<T>>,
-): UseFetchReturnType<T> => {
+  options?: Partial<UseFetchOptionType<D, E>>,
+): UseFetchReturnType<D, E> => {
   const { toHref } = useRouter();
 
-  const [data, setData] = useState<T | undefined>(options?.defaultData);
+  const [data, setData] = useState<D | undefined>(options?.defaultData);
   const [isFetching, start, stop] = useBool();
-  const [error, setError] = useState<unknown>();
+  const [error, setError] = useState<E>();
 
   const controller = useRef<AbortController>();
 
   const getUseFetchOptions = useCallback(
-    (defaultOptions: UseFetchOptionType<T>) =>
+    (defaultOptions: UseFetchOptionType<D, E>) =>
       assignWith({}, options, defaultOptions, (objValue, srcValue) => {
         if (isUndefined(objValue)) {
           return srcValue;
@@ -147,7 +145,7 @@ const useFetch = <T>(
       try {
         start();
 
-        const useFetchOptions: UseFetchOptionType<T> = getUseFetchOptions(
+        const useFetchOptions: UseFetchOptionType<D, E> = getUseFetchOptions(
           defaultUseFetchOptions,
         );
 
@@ -212,24 +210,28 @@ const useFetch = <T>(
             break;
         }
 
-        const response = await doFetch(useFetchOptions, fetcherData);
+        try {
+          const response = await doFetch<D, E>(useFetchOptions, fetcherData);
 
-        const formattedResponse = await useFetchOptions.formatter(response);
-        const { debug } = new Logger(
-          options,
-          data,
-          undefined,
-          undefined,
-          formattedResponse,
-        );
+          const formattedResponse = await useFetchOptions.formatter(response);
+          const { debug } = new Logger(
+            options,
+            data,
+            undefined,
+            undefined,
+            formattedResponse,
+          );
 
-        setData(formattedResponse);
+          setData(formattedResponse);
 
-        debug`Complete fetching`;
+          debug`Complete fetching`;
 
-        return formattedResponse;
-      } catch (e) {
-        setError(e);
+          return formattedResponse;
+        } catch (e) {
+          const { error } = e as ResponseType<E>;
+
+          error && setError(error);
+        }
       } finally {
         stop();
 
@@ -249,7 +251,7 @@ const useFetch = <T>(
     error,
     setData,
     cancel,
-  ] as UseFetchReturnType<T>;
+  ] as UseFetchReturnType<D, E>;
 
   useFetcher.setData = setData;
   useFetcher.cancel = cancel;

@@ -11,11 +11,11 @@ const registerServiceWorker = async () => {
       });
 
       if (registration.installing) {
-        console.log("[Service Worker] Installing...");
+        console.debug("[Service Worker] Installing...");
       } else if (registration.waiting) {
-        console.log("[Service Worker] Waiting...");
+        console.debug("[Service Worker] Waiting...");
       } else if (registration.active) {
-        console.log("[Service Worker] Activated");
+        console.debug("[Service Worker] Activated");
       }
     } catch (error) {
       console.error(`Registration failed with ${error}`);
@@ -23,10 +23,35 @@ const registerServiceWorker = async () => {
   }
 };
 
-const NextEraWorker = () => {
+const unregisterServiceWorker = async () => {
+  console.log("[Service Worker] Unregistering...");
+
+  const registrations = await navigator.serviceWorker.getRegistrations();
+
+  registrations.forEach(async (registration) => {
+    const isUnregister = await registration.unregister();
+
+    if (isUnregister) {
+      const cachesToDelete = await caches.keys();
+
+      await Promise.all(
+        cachesToDelete.map(async (key) => await caches.delete(key)),
+      );
+      console.debug("[Service Worker] Unregistered");
+    }
+  });
+};
+
+const NextEraWorker = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
+  useEffect(() => {}, []);
+
   useEffect(() => {
-    registerServiceWorker();
-  }, []);
+    if (isAuthenticated) {
+      registerServiceWorker();
+    } else {
+      unregisterServiceWorker();
+    }
+  }, [isAuthenticated]);
 
   return null;
 };

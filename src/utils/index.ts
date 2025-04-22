@@ -217,8 +217,11 @@ export function normalizePath(path: string) {
  */
 export function wildcardize(pattern: string) {
   const regex = new RegExp(
-    "^" +
-      _.escapeRegExp(pattern).replace(/\?/g, ".").replace(/\*/g, ".*") +
+    pattern
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\\\?/g, ".") // `?` → match any single character
+      .replace(/\\\*\\\*/g, ".*") // `**` → match anything (including `/`)
+      .replace(/\\\*/g, "[^/]*") + // `*` → match anything except `/`
       "$",
   );
 
@@ -226,6 +229,7 @@ export function wildcardize(pattern: string) {
     test: function (text: string) {
       return regex.test(text);
     },
+    source: regex.source,
   };
 }
 

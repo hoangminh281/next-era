@@ -37,6 +37,14 @@
       "import": "./dist/sw/index.js",
       "types": "./dist/sw/index.d.ts"
     },
+    "./test/register": {
+      "import": "./src/test/register.js",
+      "types": "./dist/test/register.d.ts"
+    },
+    "./test/types": {
+      "import": "./dist/test/lib/definitions.js",
+      "types": "./dist/test/lib/definitions.d.ts"
+    },
     "./log": {
       "import": "./dist/log/index.js",
       "types": "./dist/log/index.d.ts"
@@ -46,24 +54,29 @@
       "types": "./dist/utils/index.d.ts"
     }
   },
+  "bin": {
+    "next-era": "./bin/index.js"
+  },
   "scripts": {
     "clean": "rimraf dist",
-    "test": "node dist/test.js",
+    "test": "node --experimental-vm-modules --experimental-test-coverage --import tsx ./src/test/index.ts",
+    "test:watch": "pnpm test -- --watch",
     "lint": "pnpm eslint . --fix",
     "format": "pnpm prettier --write . --log-level silent",
-    "build": "pnpm audit && pnpm format && pnpm lint && pnpm clean && tsc"
+    "build": "pnpm audit && pnpm test && pnpm format && pnpm lint && pnpm clean && tsc"
   },
   "engines": {
-    "node": ">=20.12.0"
+    "node": ">=23.11.0"
   },
   "peerDependencies": {
     "@types/lodash": "4.17.13",
-    "@types/node": "22.13.5",
+    "@types/node": "23.11.0",
     "@types/react": "18.3.3",
     "@types/webpack": "5.28.5",
     "lodash": "4.17.21",
     "next": "15.3.0-canary.33",
-    "react": "19.0.0-rc-f38c22b244-20240704"
+    "react": "19.0.0-rc-f38c22b244-20240704",
+    "tsx": "4.19.3"
   },
   "dependencies": {
     "lodash": "4.17.21",
@@ -72,7 +85,7 @@
   },
   "devDependencies": {
     "@types/lodash": "4.17.13",
-    "@types/node": "22.13.5",
+    "@types/node": "22.15.2",
     "@types/react": "18.3.3",
     "@types/webpack": "5.28.5",
     "eslint": "8.57.1",
@@ -80,6 +93,7 @@
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
     "rimraf": "6.0.1",
+    "tsx": "4.19.3",
     "typescript": "5.5.2"
   }
 }

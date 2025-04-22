@@ -1,5 +1,13 @@
 import { Dispatch, SetStateAction } from "react";
 
+export type UseFetchStorageType<E> = Record<
+  string,
+  {
+    resolve: (value: ResponseType<E> | PromiseLike<ResponseType<E>>) => void;
+    reject: (reason?: ResponseType<E>) => void;
+  }[]
+>;
+
 export enum UseFetchMethodEnum {
   GET = "GET",
   POST = "POST",
@@ -7,31 +15,26 @@ export enum UseFetchMethodEnum {
   DELETE = "DELETE",
 }
 
-export type UseFetchOptionType_Deprecated<T> = {
-  revalidateIfStale?:
-    | {
-        maxAge: number;
-        staleWhileRevalidate: number;
-      }
-    | boolean;
-  formatter: (response: ResponseType) => Promise<T>;
+export type UseFetchOptionType<D, E> = {
+  formatter: (response: ResponseType<E>) => Promise<D>;
   baseURL?: string;
+  defaultData?: D;
 };
 
-export type UseFetchOptionType<T> = {
-  formatter: (response: ResponseType) => Promise<T>;
-  baseURL?: string;
-  defaultData?: T;
-};
+export type UseFetchErrorType =
+  | {
+      error: string;
+    }
+  | undefined;
 
-export type UseFetchReturnType<T> = [
-  T | undefined,
-  (data?: UseFetchDataType) => Promise<T | undefined>,
+export type UseFetchReturnType<D, E> = [
+  D | undefined,
+  (data?: UseFetchDataType) => Promise<D | undefined>,
   boolean,
-  unknown,
-  Dispatch<SetStateAction<T | undefined>>,
+  E,
+  Dispatch<SetStateAction<D | undefined>>,
   () => void,
-] & { setData: Dispatch<SetStateAction<T | undefined>>; cancel: () => void };
+] & { setData: Dispatch<SetStateAction<D | undefined>>; cancel: () => void };
 
 export type FetcherBodyType = ReadableStream | XMLHttpRequestBodyInit;
 
@@ -63,10 +66,11 @@ export type UseFetchPlainDataType = QueryType &
 
 export type UseFetchDataType = UseFetchPlainDataType | FormData | File;
 
-export type ResponseType = {
+export type ResponseType<E> = {
   headers: Headers;
   status: number;
-  data: unknown;
+  data?: unknown;
+  error?: E;
 };
 
 export type UseRouterType =
