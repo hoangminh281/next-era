@@ -1,5 +1,5 @@
 src
-test
+/test
 .eslintignore
 .eslintrc.json
 .prettierrc.json
