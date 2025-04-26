@@ -9,34 +9,40 @@ export function readFileNames(
   const files: string[] = [];
   const test = options.pattern ? wildcardize(options.pattern).test : undefined;
 
-  fs.readdirSync(dir, { withFileTypes: true, recursive: true }).map((entry) => {
-    const file = path.join("/", entry.parentPath, entry.name);
+  try {
+    fs.readdirSync(dir, { withFileTypes: true, recursive: true }).map(
+      (entry) => {
+        const file = path.join("/", entry.parentPath, entry.name);
 
-    if (!entry.isDirectory()) {
-      let normalizedPath = normalizePath(file);
+        if (!entry.isDirectory()) {
+          let normalizedPath = normalizePath(file);
 
-      if (options.exclude?.includes(normalizedPath)) {
-        return;
-      }
+          if (options.exclude?.includes(normalizedPath)) {
+            return;
+          }
 
-      if (test && !test(normalizedPath)) {
-        return;
-      }
+          if (test && !test(normalizedPath)) {
+            return;
+          }
 
-      if (options.root) {
-        const normalizedRoot = normalizePath(path.join("/", options.root));
+          if (options.root) {
+            const normalizedRoot = normalizePath(path.join("/", options.root));
 
-        if (normalizedPath.startsWith(normalizedRoot)) {
-          normalizedPath = normalizedPath.replace(
-            new RegExp(`^${normalizedRoot}`),
-            "",
-          );
+            if (normalizedPath.startsWith(normalizedRoot)) {
+              normalizedPath = normalizedPath.replace(
+                new RegExp(`^${normalizedRoot}`),
+                "",
+              );
+            }
+          }
+
+          files.push(normalizedPath);
         }
-      }
-
-      files.push(normalizedPath);
-    }
-  });
+      },
+    );
+  } catch (error) {
+    console.error(`Error reading directory ${dir}:`, error);
+  }
 
   return files;
 }
