@@ -20,7 +20,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [],
@@ -33,7 +33,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [{ method: NextEraPluginMethodEnum.GET, allow: true }],
@@ -46,7 +46,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [{ method: NextEraPluginMethodEnum.GET, allow: false }],
@@ -59,7 +59,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [{ method: NextEraPluginMethodEnum.POST, allow: true }],
@@ -72,7 +72,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [{ method: NextEraPluginMethodEnum.POST, allow: false }],
@@ -85,13 +85,13 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
                 {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                   allow: true,
                 },
               ],
@@ -104,13 +104,13 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
                 {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                   allow: false,
                 },
               ],
@@ -124,7 +124,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
@@ -144,7 +144,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
@@ -164,13 +164,13 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
                 {
                   method: NextEraPluginMethodEnum.POST,
-                  url: "/api/data",
+                  url: "/api/same",
                   allow: true,
                 },
               ],
@@ -184,13 +184,13 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
                 {
                   method: NextEraPluginMethodEnum.POST,
-                  url: "/api/data",
+                  url: "/api/same",
                   allow: false,
                 },
               ],
@@ -203,7 +203,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
@@ -222,7 +222,7 @@ export default {
               {
                 request: {
                   method: NextEraPluginMethodEnum.GET,
-                  url: "/api/data",
+                  url: "/api/same",
                 },
               },
               [
@@ -234,6 +234,28 @@ export default {
               ],
             ],
             output: false,
+          },
+          {
+            label: "Config diff a filter and same other filter -> allow",
+            input: [
+              {
+                request: {
+                  method: NextEraPluginMethodEnum.GET,
+                  url: "/api/same",
+                },
+              },
+              [
+                {
+                  url: "/api/diff",
+                  allow: false,
+                },
+                {
+                  method: NextEraPluginMethodEnum.GET,
+                  allow: true,
+                },
+              ],
+            ],
+            output: true,
           },
         ],
       },

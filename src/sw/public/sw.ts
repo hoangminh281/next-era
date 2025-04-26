@@ -272,14 +272,21 @@ const isAllowedFetchEvent = (
     return false;
   }
 
-  return filters.every((filter) => {
-    const { allow, ...attrs } = filter;
+  const result = [];
+
+  for (const { allow, ...attrs } of filters) {
     const match = Object.keys(attrs).every((key) => {
       return request[key as keyof typeof request] === attrs[key];
     });
 
-    return match ? allow : false;
-  });
+    match && result.push(allow);
+  }
+
+  if (!result.length) {
+    return false;
+  }
+
+  return result.every((allow) => allow);
 };
 
 selve.addEventListener("fetch", (event) => {
