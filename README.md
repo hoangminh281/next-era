@@ -12,6 +12,7 @@ Welcome to **Next Era**! A comprehensive library designed to supercharge your **
   - [Component (CSR)](#component-csr)
   - [API Routes (SSR/SSG)](#api-routes-ssrssg)
   - [Logging](#logging)
+  - [Testing](#testing)
   - [Utilities](#utilities)
 - [Contributing](#contributing)
 - [License](#license)
@@ -564,6 +565,61 @@ const { debug } = new Logger(data).groupCollapsed("Group Label");
 
 debug`Processing...`;
 debug`Completed.`.groupEnd();
+```
+
+### Testing
+
+Writing unit-test without boilerplate, test any function without needing export it. clean and safe.
+
+Required dependency: tsx
+
+```bash
+npm install next-era && npm install -D tsx
+# or
+yarn add next-era && yarn add -D tsx
+# or
+pnpm add next-era && pnpm add -D tsx
+```
+
+Add script in to package.json
+
+```bash
+"test": "pnpm next-era test"
+```
+
+Create `test` folder in project's root to include test specs.
+Example: I will create a specs with file name is `utils.spec.ts` (you can use `.js` instead)
+
+```ts
+// test/utils.spec.ts
+
+import { TemplateType } from "next-era/test/types";
+
+export default {
+  "/app/lib/utils.ts": {
+    // Module's path
+    generatePagination: {
+      // Function to test
+      test: {
+        label: "", // Optional, function's name will be shown as default. Ex: generatePagination
+        config: {
+          concurrency: true, // config of test runner in nodejs, reference: https://nodejs.org/api/test.html#testname-options-fn
+        },
+        cases: [
+          {
+            label: "", // Optional, number will be shown as default. Ex: #1
+            input: [1, 10], // Input params of function, will be spread as function's param
+            output: [1, "...", "10"], // Expected output of function
+          },
+        ],
+      },
+    },
+  },
+} satisfies {
+  [module: string]: {
+    generatePagination: TemplateType<[number, number], (string | number)[]>;
+  };
+};
 ```
 
 ### Utilities
