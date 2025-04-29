@@ -620,7 +620,7 @@ Next Era makes unit testing clean, boilerplate-free, and safe—no need to expor
 
 🗂 Directory Structure
 
-Create a /test folder in the project root for your specs. Each test file should export a test configuration object.
+Create a `/test` folder in the project root for your specs. Each test file should export a test configuration object.
 
 ✍️ Example
 
@@ -691,7 +691,7 @@ export default {
           {
             label: "", // Optional, number will be shown as default. Ex: #1
             assert: {
-              method: "deepStrictEqual", // The strategy of comparison, set for specific case. Default: strictEqual
+              method: "deepStrictEqual", // The strategy of comparison, set for specific case.
             },
             input: [1, 7], // Input params of function, will be spread as function's param
             expected: [1, 2, 3, 4, 5, 6, 7], // Expected output of function
