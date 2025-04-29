@@ -184,11 +184,11 @@ readFileNames("test", { pattern: "**/*.spec.ts" }).map(async (fileName) => {
               expected = JSON.stringify(expected);
             }
 
-            _.get(
-              assertMapping,
-              assert.method || "",
-              assertMapping.strictEqual,
-            )(output, expected, assert.message);
+            _.get(assertMapping, assert.method, assertMapping.strictEqual)(
+              output,
+              expected,
+              assert.message,
+            );
           });
         });
       });
