@@ -1,5 +1,5 @@
 import _ from "lodash";
-import assert from "node:assert/strict";
+import assert, { AssertPredicate } from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { format } from "node:path";
 import test from "node:test";
@@ -8,6 +8,42 @@ import { createContext, SourceTextModule } from "node:vm";
 import ts from "typescript";
 import { readFileNames } from "../lib/utils.js";
 import { TemplateType } from "./lib/definitions.js";
+
+const assertMapping = {
+  equal: assert.equal,
+  strictEqual: assert.strictEqual,
+  deepStrictEqual: assert.deepStrictEqual,
+  partialDeepStrictEqual: assert.partialDeepStrictEqual,
+  notStrictEqual: assert.notStrictEqual,
+  notDeepStrictEqual: assert.notDeepStrictEqual,
+  match: (output, expected, message) =>
+    assert.match(output as string, expected as RegExp, message),
+  doesNotMatch: (output, expected, message) =>
+    assert.doesNotMatch(output as string, expected as RegExp, message),
+  doesNotReject: (output, expected, message) =>
+    assert.doesNotReject(
+      output as (() => Promise<unknown>) | Promise<unknown>,
+      expected as AssertPredicate,
+      message,
+    ),
+  doesNotThrow: (output, expected, message) =>
+    assert.doesNotThrow(
+      output as () => unknown,
+      expected as AssertPredicate,
+      message,
+    ),
+  fail: (_output: unknown, _expected: unknown, message) => assert.fail(message),
+  ok: (output: unknown, _expected: unknown, message) =>
+    assert.ok(output, message),
+  ifError: (output: unknown) => assert.ifError(output),
+} satisfies Record<
+  string,
+  (
+    output: unknown,
+    expected: unknown,
+    message: string | Error | undefined,
+  ) => unknown
+>;
 
 readFileNames("test", { pattern: "**/*.spec.ts" }).map(async (fileName) => {
   const testPath = pathToFileURL(
@@ -137,10 +173,22 @@ readFileNames("test", { pattern: "**/*.spec.ts" }).map(async (fileName) => {
       test(_test.label || fnName, _test.config, async (t) => {
         _.map(_test.cases, (_case, index) => {
           t.test(_case.label || `Case #${index}`, () => {
-            assert.equal(
-              _.isArray(_case.input) ? fn(..._case.input) : _case.input(fn),
-              _case.output,
-            );
+            let output = _.isArray(_case.input)
+              ? fn(..._case.input)
+              : _case.input(fn);
+            let expected = _case.expected;
+            const assert = _.defaultsDeep({}, _case.assert, _test.assert);
+
+            if (_.isArray(output) && _.isArray(expected)) {
+              output = JSON.stringify(output);
+              expected = JSON.stringify(expected);
+            }
+
+            _.get(
+              assertMapping,
+              assert.method || "",
+              assertMapping.strictEqual,
+            )(output, expected, assert.message);
           });
         });
       });

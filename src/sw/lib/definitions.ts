@@ -1,9 +1,9 @@
 export enum NextEraPluginMethodEnum {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  DELETE = "DELETE",
-  OPTIONS = "OPTIONS",
+  Get = "GET",
+  Post = "POST",
+  Put = "PUT",
+  Delete = "DELETE",
+  Options = "OPTIONS",
 }
 
 export type NextEraPluginStragegyFilterType = {

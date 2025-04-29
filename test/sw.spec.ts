@@ -25,7 +25,7 @@ export default {
               },
               [],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config same allowed method -> allow",
@@ -38,7 +38,7 @@ export default {
               },
               [{ method: NextEraPluginMethodEnum.GET, allow: true }],
             ],
-            output: true,
+            expected: true,
           },
           {
             label: "Config same not-allowed method -> not allow",
@@ -51,7 +51,7 @@ export default {
               },
               [{ method: NextEraPluginMethodEnum.GET, allow: false }],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config diff allowed method -> not allow",
@@ -64,7 +64,7 @@ export default {
               },
               [{ method: NextEraPluginMethodEnum.POST, allow: true }],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config diff not-allowed method -> not allow",
@@ -77,7 +77,7 @@ export default {
               },
               [{ method: NextEraPluginMethodEnum.POST, allow: false }],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config same allowed method and url -> allow",
@@ -96,7 +96,7 @@ export default {
                 },
               ],
             ],
-            output: true,
+            expected: true,
           },
           {
             label: "Config same not-allowed method and url -> not allow",
@@ -115,7 +115,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label:
@@ -135,7 +135,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label:
@@ -155,7 +155,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label:
@@ -175,7 +175,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label:
@@ -195,7 +195,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config diff allowed method and url -> not allow",
@@ -214,7 +214,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config diff not allowed method and url -> not allow",
@@ -233,7 +233,7 @@ export default {
                 },
               ],
             ],
-            output: false,
+            expected: false,
           },
           {
             label: "Config diff a filter and same other filter -> allow",
@@ -255,7 +255,7 @@ export default {
                 },
               ],
             ],
-            output: true,
+            expected: true,
           },
         ],
       },
@@ -273,15 +273,15 @@ export default {
         cases: [
           {
             input: (fn) => fn("file-*.txt").source,
-            output: "file-[^/]*\\.txt$",
+            expected: "file-[^/]*\\.txt$",
           },
           {
             input: (fn) => fn("data/**/report").source,
-            output: "data\\/.*\\/report$",
+            expected: "data\\/.*\\/report$",
           },
           {
             input: (fn) => fn("logs/??.log").source,
-            output: "logs\\/..\\.log$",
+            expected: "logs\\/..\\.log$",
           },
         ],
       },

@@ -38,7 +38,7 @@ export default class NextEraPlugin {
         strategy: {
           filter: _.compact(
             _.union(_.get(options, "sw.strategy.filter", []), [
-              { method: NextEraPluginMethodEnum.GET, allow: true },
+              { method: NextEraPluginMethodEnum.Get, allow: true },
             ]),
           ),
           cf: _.compact(_.get(options, "sw.strategy.cf", [])),

@@ -200,6 +200,40 @@ const nextConfig = {
 > [!IMPORTANT]
 > In Development mode, the Service Worker strategy will always be set to `/**` for `NF` to ensure the freshest data is fetched during coding.
 
+##### Others
+
+- **Example: in next.config.mjs**
+
+```ts
+import { NextEraPlugin } from "next-era/sw";
+
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NextEraPlugin({
+          sw: {
+            // Use buildId as the cache name to invalidate old caches on each build and ensure clients get the latest version
+            cacheName: buildId,
+            strategy: {
+              filter: [
+                // Filter requests handled by the Service Worker
+                // - Block all requests to /auth/**
+                { url: "/auth/**", allow: false },
+                // - Allow only GET requests by default
+                { method: NextEraPluginMethodEnum.Get, allow: true },
+              ],
+            },
+          },
+        }),
+      );
+    }
+
+    return config;
+  },
+};
+```
+
 #### NextEraWorker (Hook Component)
 
 This component registers events for `sw.js` into the Service Worker. Place it inside `layout.tsx` within the `app` folder.
@@ -219,8 +253,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <NextEraWorker />
         {children}
+        <NextEraWorker />
       </body>
     </html>
   );
@@ -569,26 +603,65 @@ debug`Completed.`.groupEnd();
 
 ### Testing
 
-Writing unit-test without boilerplate, test any function without needing export it. clean and safe.
+Next Era makes unit testing clean, boilerplate-free, and safe—no need to export your internal functions or test modules explicitly.
 
-Required dependency: tsx
+✅ Requirements
 
-```bash
-npm install next-era && npm install -D tsx
-# or
-yarn add next-era && yarn add -D tsx
-# or
-pnpm add next-era && pnpm add -D tsx
-```
-
-Add script in to package.json
+- Install `tsx` as a dev dependency.
+- Add a test script to your package.json:
 
 ```bash
-"test": "pnpm next-era test"
+{
+  "scripts": {
+    "test": "pnpm next-era test"
+  }
+}
 ```
 
-Create `test` folder in project's root to include test specs.
-Example: I will create a specs with file name is `utils.spec.ts` (you can use `.js` instead)
+🗂 Directory Structure
+
+Create a /test folder in the project root for your specs. Each test file should export a test configuration object.
+
+✍️ Example
+
+`test/utils.spec.ts` – testing `generatePagination` from `app/lib/utils.ts`:
+
+```ts
+// app/lib/utils.ts
+
+function generatePagination(currentPage: number, totalPages: number) {
+  // If the total number of pages is 7 or less,
+  // display all pages without any ellipsis.
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  // If the current page is among the first 3 pages,
+  // show the first 3, an ellipsis, and the last 2 pages.
+  if (currentPage <= 3) {
+    return [1, 2, 3, "...", totalPages - 1, totalPages];
+  }
+
+  // If the current page is among the last 3 pages,
+  // show the first 2, an ellipsis, and the last 3 pages.
+  if (currentPage >= totalPages - 2) {
+    return [1, 2, "...", totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  // If the current page is somewhere in the middle,
+  // show the first page, an ellipsis, the current page and its neighbors,
+  // another ellipsis, and the last page.
+  return [
+    1,
+    "...",
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    "...",
+    totalPages,
+  ];
+}
+```
 
 ```ts
 // test/utils.spec.ts
@@ -605,11 +678,35 @@ export default {
         config: {
           concurrency: true, // config of test runner in nodejs, reference: https://nodejs.org/api/test.html#testname-options-fn
         },
+        context: {
+          // Context of testing module to mock. Ex: global variables,...
+          self: {
+            addEventListener: () => null,
+          },
+        },
+        assert: {
+          method: "deepStrictEqual", // The strategy of comparison, set for all cases. Default: strictEqual
+        },
         cases: [
           {
             label: "", // Optional, number will be shown as default. Ex: #1
-            input: [1, 10], // Input params of function, will be spread as function's param
-            output: [1, "...", "10"], // Expected output of function
+            assert: {
+              method: "deepStrictEqual", // The strategy of comparison, set for specific case. Default: strictEqual
+            },
+            input: [1, 7], // Input params of function, will be spread as function's param
+            expected: [1, 2, 3, 4, 5, 6, 7], // Expected output of function
+          },
+          {
+            input: [3, 8],
+            expected: [1, 2, 3, "...", 7, 8],
+          },
+          {
+            input: [6, 8],
+            expected: [1, 2, "...", 6, 7, 8],
+          },
+          {
+            input: [4, 8],
+            expected: [1, "...", 3, 4, 5, "...", 8],
           },
         ],
       },
@@ -621,6 +718,15 @@ export default {
   };
 };
 ```
+
+![Image about the record of a testcase](https://res.cloudinary.com/dwf0elilp/image/upload/v1745907990/testing_pfbojg.png)
+
+🔍 Key Benefits
+
+- No explicit exports required: Test private/internal functions directly.
+- Mock global/contextual variables: Use the context object.
+- Flexible assertions: Define default or per-case comparison methods (strictEqual, deepStrictEqual, etc.).
+- Concurrent execution support: Opt-in via config.concurrency.
 
 ### Utilities
 
