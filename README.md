@@ -311,7 +311,7 @@ const [isEditing, enableEditing, disableEditing] = useBool();
 A flexible hook for fetching API data.
 
 - **Requires:** A base API URL configured in `.env` or passed as an option. `NEXT_ERA_API_URL` or `NEXT_PUBLIC_NEXT_ERA_API_URL` (if you're working on NextJS)
-- **Uses:** ~~`useFetch` (inspired by SWR) for optimized data fetching.~~ `useFetch` for enhanced pass params/queries.
+- **Uses:** `useFetch` for optimized data fetching, enhanced pass params/queries. Automatically deduplicates concurrent identical requests—only one fetch is sent, and the result is shared across all pending calls.
 
 - **Example:**
 
@@ -605,10 +605,11 @@ debug`Completed.`.groupEnd();
 
 Next Era makes unit testing clean, boilerplate-free, and safe—no need to export your internal functions or test modules explicitly.
 
-✅ Requirements
+- **Requires:**
 
-- Install `tsx` as a dev dependency.
-- Add a test script to your package.json:
+Install `tsx` as a dev dependency.
+
+Add a test script to your package.json:
 
 ```bash
 {
@@ -618,11 +619,11 @@ Next Era makes unit testing clean, boilerplate-free, and safe—no need to expor
 }
 ```
 
-🗂 Directory Structure
+- **Uses:**
 
 Create a `/test` folder in the project root for your specs. Each test file should export a test configuration object.
 
-✍️ Example
+- **Example:**
 
 `test/utils.spec.ts` – testing `generatePagination` from `app/lib/utils.ts`:
 
@@ -669,10 +670,10 @@ function generatePagination(currentPage: number, totalPages: number) {
 import { TemplateType } from "next-era/test/types";
 
 export default {
+  // Module's path
   "/app/lib/utils.ts": {
-    // Module's path
+    // Function to test
     generatePagination: {
-      // Function to test
       test: {
         label: "", // Optional, function's name will be shown as default. Ex: generatePagination
         config: {
